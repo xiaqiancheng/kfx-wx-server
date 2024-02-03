@@ -9,7 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-namespace App\Controller\Index\V1;
+namespace App\Controller\V1;
 
 use App\Controller\AbstractController;
 use OpenApi\Annotations as OA;

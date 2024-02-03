@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller\Index\Swagger;
+namespace App\Controller\Swagger;
 
 use OpenApi\Annotations as OA;
 
