@@ -3,5 +3,5 @@
 use Hyperf\HttpServer\Router\Router;
 
 Router::addGroup('/wxapi/', function () {
-   Router::get('index', 'App\Controller\Index\V1\IndexController@index');
+   Router::get('index/images', 'App\Controller\Index\V1\IndexController@images');
 });

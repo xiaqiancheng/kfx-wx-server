@@ -31,6 +31,7 @@
         "hyperf/memory": "~2.2.0",
         "hyperf/process": "~2.2.0",
         "hyperf/redis": "~2.2.0",
+        "hyperf/swagger": "^2.1",
         "hyperf/validation": "^2.2"
     },
     "require-dev": {
