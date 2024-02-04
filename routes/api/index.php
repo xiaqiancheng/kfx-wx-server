@@ -7,4 +7,6 @@ Router::addGroup('/wxapi/', function () {
 
    // 任务标签
    Router::get('task/tags', 'App\Controller\V1\TaskController@tags');
+
+   Router::get('task/list', 'App\Controller\V1\TaskController@getList');
 });
