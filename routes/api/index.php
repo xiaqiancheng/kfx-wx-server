@@ -3,7 +3,7 @@
 use Hyperf\HttpServer\Router\Router;
 
 Router::addGroup('/wxapi/', function () {
-   Router::get('index/images', 'App\Controller\V1\IndexController@images');
+   Router::get('get-ads', 'App\Controller\V1\IndexController@images');
 
    // 任务标签
    Router::get('task/tags', 'App\Controller\V1\TaskController@tags');
