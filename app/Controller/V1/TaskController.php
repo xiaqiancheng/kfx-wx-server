@@ -13,28 +13,35 @@ class TaskController extends AbstractController
      * @OA\Get(
      *     path="/wxapi/task/tags",
      *     tags={"任务"},
-     *     summary="任务标签",
-     *     description="任务标签",
+     *     summary="任务结算方式和标签",
+     *     description="任务结算方式和标签",
      *     operationId="TaskController_tags",
-     *     @OA\Response(response="200", description="标签列表返回",
+     *     @OA\Response(response="200", description="任务结算方式和标签列表返回",
      *         @OA\JsonContent(type="object",
      *             required={"errcode", "errmsg", "data"},
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"form", "content"},
+     *                 required={"settle_type", "form", "content"},
+     *                 @OA\Property(property="settle_type", type="array", description="结算方式",
+     *                     @OA\Items(type="object", 
+     *                          required={"value", "label"},
+     *                          @OA\Property(property="value", type="integer", description="唯一值"),
+     *                          @OA\Property(property="label", type="string", description="名称")
+     *                      )
+     *                 ),
      *                 @OA\Property(property="form", type="array", description="全部形态数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "name"},
-     *                          @OA\Property(property="id", type="integer", description="唯一id"),
-     *                          @OA\Property(property="name", type="string", description="名称")
+     *                          required={"value", "label"},
+     *                          @OA\Property(property="value", type="integer", description="唯一值"),
+     *                          @OA\Property(property="label", type="string", description="名称")
      *                      )
      *                 ),
      *                 @OA\Property(property="content", type="array", description="全部内容数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "name"},
-     *                          @OA\Property(property="id", type="integer", description="唯一id"),
-     *                          @OA\Property(property="name", type="string", description="名称")
+     *                          required={"value", "label"},
+     *                          @OA\Property(property="value", type="integer", description="唯一值"),
+     *                          @OA\Property(property="label", type="string", description="名称")
      *                      )
      *                 )
      *             )
@@ -44,7 +51,7 @@ class TaskController extends AbstractController
      */
     public function tags()
     {
-        $list = TagRepository::instance()->getList([], ['id', 'name', 'dimension'], 0);
+        $list = TagRepository::instance()->getList([], ['id as value', 'name as label', 'dimension'], 0);
 
         $map = [
             1 => 'form', // 形态
@@ -55,6 +62,30 @@ class TaskController extends AbstractController
         foreach ($list['list'] as $v) {
             $data[$map[$v['dimension']]][] = $v;
         }
+
+        // 结算方式
+        $data['settle_type'] = [
+            [
+                'label' => '广告分成',
+                'value' => 1
+            ],
+            [
+                'label' => '支付分成（基础）',
+                'value' => 2
+            ],
+            [
+                'label' => '支付分成（绑定）',
+                'value' => 3
+            ],
+            [
+                'label' => '广告分成+支付分成（基础）',
+                'value' => 7
+            ],
+            [
+                'label' => '广告分成+支付分成（绑定）',
+                'value' => 8
+            ]
+        ];
 
         return $this->response->success($data);
     }
