@@ -3,6 +3,7 @@ namespace App\Controller\V1;
 
 use App\Controller\AbstractController;
 use App\Repositories\TagRepository;
+use App\Repositories\VideoRepository;
 use App\Services\TaskService;
 use OpenApi\Annotations as OA;
 
@@ -86,7 +87,7 @@ class TaskController extends AbstractController
      *     @OA\Parameter(name="sort", in="query", description="排序 1：最新任务 2：投稿人数降序 3：最高收益",
      *         @OA\Schema(type="integer")
      *     ),
-     *     @OA\Response(response="200", description="标签列表返回",
+     *     @OA\Response(response="200", description="任务列表返回",
      *         @OA\JsonContent(type="object",
      *             required={"errcode", "errmsg", "data"},
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
@@ -95,8 +96,8 @@ class TaskController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="全部形态数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "commission"},
-     *                          @OA\Property(property="id", type="integer", description="唯一id"),
+     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit"},
+     *                          @OA\Property(property="id", type="integer", description="id"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
      *                          @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成 2-支付交易CPS"),
      *                          @OA\Property(property="start_page", type="string", description="小程序页面地址"),
@@ -104,7 +105,7 @@ class TaskController extends AbstractController
      *                          @OA\Property(property="task_icon", type="string", description="任务图标"),
      *                          @OA\Property(property="task_tags", type="object", description="任务标签"),
      *                          @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
-     *                          @OA\Property(property="commission", type="integer", description="最大收益（分）")
+     *                          @OA\Property(property="profit", type="integer", description="最大收益（分）")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -154,12 +155,12 @@ class TaskController extends AbstractController
             $sort = ['contribution_number' => 'desc'];
         }
         if ($params['sort'] ?? '' && $params['sort'] == 3) {
-            $sort = ['commission' => 'desc'];
+            $sort = ['profit' => 'desc'];
         }
 
         $service = new TaskService();
 
-        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission'],  $page, $pageSize, $sort);
+        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
         // //var_dump($list);
@@ -181,5 +182,65 @@ class TaskController extends AbstractController
 
 
         return $this->response->success($list);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/task/info/{taskId}",
+     *     tags={"任务"},
+     *     summary="任务详情",
+     *     description="任务详情",
+     *     operationId="TaskController_getInfo",
+     *     @OA\Parameter(name="taskId", in="path", description="任务ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response="200", description="任务详情返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "max_video_info"},
+     *                 @OA\Property(property="id", type="integer", description="任务id"),
+     *                 @OA\Property(property="task_name", type="string", description="任务名称"),
+     *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
+     *                 @OA\Property(property="audit_requirement", type="string", description="审核要求"),
+     *                 @OA\Property(property="creative_guidance", type="string", description="创作指导"),
+     *                 @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成 2-支付交易CPS"),
+     *                 @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
+     *                 @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳"),
+     *                 @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比"),
+     *                 @OA\Property(property="task_icon", type="string", description="任务图标"),
+     *                 @OA\Property(property="task_tags", type="object", description="任务标签"),
+     *                 @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
+     *                 @OA\Property(property="commission", type="integer", description="额外奖励（分）"),
+     *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
+     *                     @OA\Items(type="object", 
+     *                          required={"id", "cover", "play_count", "forward_count"},
+     *                          @OA\Property(property="id", type="integer", description="视频榜单id"),
+     *                          @OA\Property(property="cover", type="string", description="封面图"),
+     *                          @OA\Property(property="play_count", type="integer", description="播放量"),
+     *                          @OA\Property(property="forward_count", type="integer", description="收藏转发量")
+     *                      )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getInfo($taskId) {
+        $service = new TaskService();
+
+        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission']);
+    
+        $data['payment_allocate_ratio'] = 1; // 达人分成比例
+        $data['audit_requirement'] = '审核要求'; // 审核要求
+        $data['creative_guidance'] = '创作指导'; // 创作指导
+
+        // 视频榜单
+        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
+        $data['max_video_info'] = $videoList['list'];
+
+        return $this->response->success($data);
     }
 }

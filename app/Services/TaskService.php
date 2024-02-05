@@ -19,4 +19,9 @@ class TaskService
 
         return $list;
     }
+
+    public function __call($name, $arguments)
+    {
+        return TaskRepository::instance()->$name(...$arguments);
+    }
 }
