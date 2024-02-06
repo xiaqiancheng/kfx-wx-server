@@ -1,7 +1,9 @@
 <?php
 namespace App\Controller\V1;
 
+use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
+use App\Exception\BusinessException;
 use App\Repositories\TagRepository;
 use App\Repositories\VideoRepository;
 use App\Services\TaskService;
@@ -106,7 +108,7 @@ class TaskController extends AbstractController
      *     @OA\Parameter(name="task_name", in="query", description="任务名称",
      *         @OA\Schema(type="string")
      *     ),
-     *     @OA\Parameter(name="task_settle_type", in="query", description="结算方式，类型包含：1-广告分成 2-支付交易CPS",
+     *     @OA\Parameter(name="task_settle_type", in="query", description="结算方式，类型包含：1-广告分成、2-支付分成（基础）、3-支付分成（绑定）、7-广告分成+支付分成（基础）、8-广告分成+支付分成（绑定）",
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Parameter(name="form", in="query", description="形态",
@@ -237,7 +239,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
      *                 @OA\Property(property="audit_requirement", type="string", description="审核要求"),
      *                 @OA\Property(property="creative_guidance", type="string", description="创作指导"),
-     *                 @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成 2-支付交易CPS"),
+     *                 @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成、2-支付分成（基础）、3-支付分成（绑定）、7-广告分成+支付分成（基础）、8-广告分成+支付分成（绑定）"),
      *                 @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
      *                 @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳"),
      *                 @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比"),
@@ -273,5 +275,23 @@ class TaskController extends AbstractController
         $data['max_video_info'] = $videoList['list'];
 
         return $this->response->success($data);
+    }
+
+    public function calendar() {
+        $month = $this->request->input('month');
+
+        if (!$month) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '月份必传');
+        }
+        $days_in_month = date('t', strtotime("$month-01"));
+
+        $month_array = array_fill(0, $days_in_month, 0);
+
+        $random_indices = array_rand($month_array, 10);
+        foreach ($random_indices as $index) {
+            $month_array[$index] = 1;
+        }
+
+        return $this->response->success($month_array);
     }
 }

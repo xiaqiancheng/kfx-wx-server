@@ -11,4 +11,7 @@ Router::addGroup('/wxapi/', function () {
    Router::get('task/list', 'App\Controller\V1\TaskController@getList');
 
    Router::get('task/info/{taskId:\d+}', 'App\Controller\V1\TaskController@getInfo');
+
+   // 获取任务日历状态
+   Router::get('task/calendar', 'App\Controller\V1\TaskController@calendar');
 });
