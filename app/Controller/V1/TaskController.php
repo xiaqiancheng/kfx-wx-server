@@ -277,6 +277,26 @@ class TaskController extends AbstractController
         return $this->response->success($data);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/wxapi/task/calendar",
+     *     tags={"任务"},
+     *     summary="任务日历",
+     *     description="任务日历",
+     *     operationId="TaskController_calendar",
+     *     @OA\Parameter(name="month", in="path", description="月份 如：2024-02",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(response="200", description="日历状态返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回 0：无任务，1：有任务")
+     *         )
+     *     )
+     * )
+     */
     public function calendar() {
         $month = $this->request->input('month');
 
