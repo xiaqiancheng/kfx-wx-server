@@ -127,7 +127,7 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
      *                 required={"total_count", "list"},
-     *                 @OA\Property(property="list", type="array", description="全部形态数据",
+     *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit"},
      *                          @OA\Property(property="id", type="integer", description="id"),
@@ -313,5 +313,69 @@ class TaskController extends AbstractController
         }
 
         return $this->response->success($month_array);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/task/history/{taskId}",
+     *     tags={"任务"},
+     *     summary="任务历史",
+     *     description="任务历史",
+     *     operationId="TaskController_getHistoryList",
+     *     @OA\Parameter(name="page", in="query", description="页码 1开始",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\Parameter(name="page_size", in="query", description="每页数量",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\Response(response="200", description="任务列表返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"total_count", "list"},
+     *                 @OA\Property(property="list", type="array", description="任务历史数据",
+     *                     @OA\Items(type="object", 
+     *                          required={"name", "modify_date", "task_desc"},
+     *                          @OA\Property(property="name", type="string", description="任务名称"),
+     *                          @OA\Property(property="modify_date", type="string", description="修改日期"),
+     *                          @OA\Property(property="task_desc", type="string", description="任务描述")
+     *                      )
+     *                 ),
+     *                 @OA\Property(property="total_count", type="integer", description="总数量")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getHistoryList($taskId) {
+        $list = [
+            'total_count' => 4,
+            'list' => [
+                [
+                    'name' => '任务名称',
+                    'modify_date' => '2024-01-22',
+                    'task_desc' => '测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍'
+                ],
+                [
+                    'name' => '任务名称1',
+                    'modify_date' => '2024-01-11',
+                    'task_desc' => '测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍'
+                ],
+                [
+                    'name' => '任务名称2',
+                    'modify_date' => '2024-01-09',
+                    'task_desc' => '测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍'
+                ],
+                [
+                    'name' => '任务名称2',
+                    'modify_date' => '2024-01-08',
+                    'task_desc' => '测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍测试产品介绍'
+                ]
+            ]
+        ];
+
+        return $this->response->success($list);
     }
 }
