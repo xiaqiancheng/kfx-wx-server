@@ -77,11 +77,7 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => \HyperfExt\Auth\UserProviders\ModelUserProvider::class,
-            'options' => [
-                'model' => App\User::class,
-                'hash_driver' => 'bcrypt',
-            ],
+            'driver' => \App\Auth\UserProvider::class
         ],
 
         'account' => [
