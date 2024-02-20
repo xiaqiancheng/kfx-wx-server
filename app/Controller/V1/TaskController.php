@@ -8,6 +8,7 @@ use App\Repositories\TagRepository;
 use App\Repositories\VideoRepository;
 use App\Services\TaskService;
 use OpenApi\Annotations as OA;
+use App\Repositories\TaskCollectionRepository;
 
 class TaskController extends AbstractController
 {
@@ -233,7 +234,7 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "max_video_info"},
+     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "collection_status", "reject_reason", "max_video_info"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
@@ -247,6 +248,9 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="task_tags", type="object", description="任务标签"),
      *                 @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
      *                 @OA\Property(property="commission", type="integer", description="额外奖励（分）"),
+     *                 @OA\Property(property="collection_status", type="integer", description="任务领取审核状态 -1未领取 0待审核，1已审核，2审核未通过"),
+     *                 @OA\Property(property="reject_reason", type="string", description="任务审核拒绝原因"),
+     *                 @OA\Property(property="video_check_status", type="string", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "cover", "play_count", "forward_count"},
@@ -262,6 +266,12 @@ class TaskController extends AbstractController
      * )
      */
     public function getInfo($taskId) {
+        $userInfo = null;
+        try {
+            auth('api')->checkOrFail();
+            $userInfo = auth('api')->user();
+        }catch (\Throwable $throwable) {}
+
         $service = new TaskService();
 
         $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission']);
@@ -270,8 +280,27 @@ class TaskController extends AbstractController
         $data['audit_requirement'] = '审核要求'; // 审核要求
         $data['creative_guidance'] = '创作指导'; // 创作指导
 
+        // 任务领取状态
+        $data['collection_status'] = -1;
+        $data['reject_reason'] = '';
+        // 视频审核状态
+        $data['video_check_status'] = -1;
+
+        if ($userInfo) {
+            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason']);
+            if ($result) {
+                $data['collection_status'] = $result['status'];
+                $data['reject_reason'] = $result['reject_reason'];
+            }
+
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status']);
+            if ($result1) {
+                $data['video_check_status'] = $result1['status'];
+            }
+        }
+
         // 视频榜单
-        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1, 'video_check_status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
         $data['max_video_info'] = $videoList['list'];
 
         return $this->response->success($data);

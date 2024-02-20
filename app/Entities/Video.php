@@ -23,6 +23,7 @@ use Belief\Hyperf\Database\Entity;
  * @property string $author 
  * @property int $task_id 
  * @property int $income 
+ * @property int $status 
  */
 class Video extends Entity
 {
@@ -43,5 +44,5 @@ class Video extends Entity
      *
      * @var array
      */
-    protected $casts = ['id' => 'integer', 'blogger_id' => 'integer', 'create_time' => 'integer', 'share_count' => 'integer', 'forward_count' => 'integer', 'comment_count' => 'integer', 'digg_count' => 'integer', 'download_count' => 'integer', 'play_count' => 'integer', 'task_id' => 'integer', 'income' => 'integer'];
+    protected $casts = ['id' => 'integer', 'blogger_id' => 'integer', 'create_time' => 'integer', 'share_count' => 'integer', 'forward_count' => 'integer', 'comment_count' => 'integer', 'digg_count' => 'integer', 'download_count' => 'integer', 'play_count' => 'integer', 'task_id' => 'integer', 'income' => 'integer', 'status' => 'integer'];
 }
