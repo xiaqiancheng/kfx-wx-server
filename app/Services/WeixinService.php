@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Constants\ErrorCode;
+use App\Exception\BusinessException;
 use Hyperf\Guzzle\HandlerStackFactory;
 use GuzzleHttp\Client;
 
@@ -22,10 +24,39 @@ class WeixinService
     {
         $response = $this->request($this->code2SessionUrl, 'GET', ['appid' => $this->appid, 'secret' => $this->secret, 'js_code' => $code, 'grant_type' => 'authorization_code']);
         
-        if ($response['errcode'] === 0) {
+        if (!($response['errcode'] ?? '')) {
             return $response;
         }
+
+        logger('用户登录', 'wx')->error(json_encode($response));
         return false;
+    }
+
+    public function decryptData($session, $iv, $encryptedData) 
+    {
+        if (strlen($session) != 24) {
+            throw new BusinessException(ErrorCode::ILLEGAL_AES_KEY);
+		}
+		$aesKey = base64_decode($session);
+
+		if (strlen($iv) != 24) {
+            throw new BusinessException(ErrorCode::ILLEGAL_IV);
+		}
+		$aesIV = base64_decode($iv);
+
+		$aesCipher = base64_decode($encryptedData);
+
+		$result = openssl_decrypt($aesCipher, "AES-128-CBC", $aesKey, 1, $aesIV);
+
+		$dataObj = json_decode($result);
+		if ($dataObj == NULL ) {
+            throw new BusinessException(ErrorCode::ILLEGAL_BUFFER);
+		}
+
+		if ($dataObj->watermark->appid != $this->appid ) {
+            throw new BusinessException(ErrorCode::ILLEGAL_BUFFER);
+		}
+		return $result;
     }
 
     public function request(string $url, string $method = 'GET', array $options = [])
@@ -48,9 +79,11 @@ class WeixinService
         }
 
         $response = $client->request($method, $url, $params);
+        
+        $body = $response->getBody();
 
-        $body = (string)$response->getBody();
+        $contents = $body->getContents();
 
-        return json_decode($body, true);
+        return json_decode($contents, true);
     }
 }

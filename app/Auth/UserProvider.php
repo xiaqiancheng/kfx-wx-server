@@ -21,8 +21,7 @@ class UserProvider implements UserProviderInterface
      */
     public function retrieveById($identifier): ?AuthenticatableInterface
     {
-        $userInfo = BloggerRepository::instance()->find($identifier->id, ['id', 'openid', 'name', 'nickName']);
-
+        $userInfo = BloggerRepository::instance()->find($identifier, ['id', 'openid', 'avatarUrl', 'name', 'nickName', 'level', 'income']);
         return new GenericUser($userInfo);
     }
 
@@ -55,7 +54,13 @@ class UserProvider implements UserProviderInterface
         }
         $user = BloggerRepository::instance()->saveData($data);
 
-        return new GenericUser($user);
+        $userInfo = [
+            'id' => $user['id'],
+            'is_authorize_user' => $user['is_authorize_user'], 
+            'is_authorize_phone' => $user['is_authorize_phone'],
+            'user' => $user['id']
+        ];
+        return new GenericUser($userInfo);
     }
 
     /**

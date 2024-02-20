@@ -55,4 +55,24 @@ class ErrorCode extends AbstractConstants
      * @Message("存在子节点不允许删除")
      */
     const ERR_NO_DEL = 101;
+
+    /**
+     * @Message("encodingAesKey 非法")
+     */
+    const ILLEGAL_AES_KEY = -41001;
+
+    /**
+     * @Message("iv 非法")
+     */
+    const ILLEGAL_IV = -41002;
+
+    /**
+     * @Message("aes 解密失败")
+     */
+    const ILLEGAL_BUFFER = -41003;
+
+    /**
+     * @Message("解密后得到的buffer非法")
+     */
+    const DECODE_BASE64_EEEOR = -41004;
 }

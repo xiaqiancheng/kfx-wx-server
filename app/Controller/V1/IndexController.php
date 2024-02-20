@@ -113,4 +113,81 @@ class IndexController extends AbstractController
             ]
         ]);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/news/list",
+     *     summary="文章列表",
+     *     description="文章列表",
+     *     operationId="IndexController_newsList",
+     *     @OA\Parameter(name="page", in="query", description="页码 1开始",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\Parameter(name="page_size", in="query", description="每页数量",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\Response(response="200", description="文章列表返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"total_count", "list"},
+     *                 @OA\Property(property="list", type="array", description="文章数据",
+     *                     @OA\Items(type="object", 
+     *                          required={"time", "name", "description", "url"},
+     *                          @OA\Property(property="time", type="string", description="时间"),
+     *                          @OA\Property(property="name", type="string", description="名称"),
+     *                          @OA\Property(property="description", type="string", description="描述"),
+     *                          @OA\Property(property="url", type="string", description="外链")
+     *                      )
+     *                 ),
+     *                 @OA\Property(property="total_count", type="integer", description="总数量")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function newsList()
+    {
+        $page = $this->request->input('page', 1);
+        $pageSize = $this->request->input('page_size', 20);
+
+        return $this->response->success([
+            'list' => [
+                [
+                    'time' => '2024-01-06 20:39',
+                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
+                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'id' => 2,
+                    'time' => '2024-01-05 20:39',
+                    'name' => 'wx.getUserProfile调用报错？',
+                    'description' => 'wx.getUserProfile调用报错',
+                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000c0e3f040628cba2408b12a64c00'
+                ],
+                [
+                    'time' => '2024-01-04 20:39',
+                    'name' => '新手教程3',
+                    'description' => '新手教程3新手教程3新手教程3新手教程3新手教程3新手教程3',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'time' => '2024-01-03 20:39',
+                    'name' => '新手教程2',
+                    'description' => '新手教程2新手教程2新手教程2新手教程2新手教程2',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'time' => '2024-01-02 20:39',
+                    'name' => '常见问题',
+                    'description' => '问题问题问题问题问题问题问题问题问题问题问题问题问题',
+                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000000f02c86a8e2dc40db62661800'
+                ],
+            ],
+            'total_count' => 5
+        ]);
+    }
 }

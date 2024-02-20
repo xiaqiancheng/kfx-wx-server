@@ -117,7 +117,7 @@ class GenericUser implements AuthenticatableInterface, JwtSubjectInterface
      */
     public function getJwtIdentifier()
     {
-        return $this->attributes;
+        return $this->attributes['user'];
     }
 
     /**
