@@ -250,7 +250,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="commission", type="integer", description="额外奖励（分）"),
      *                 @OA\Property(property="collection_status", type="integer", description="任务领取审核状态 -1未领取 0待审核，1已审核，2审核未通过"),
      *                 @OA\Property(property="reject_reason", type="string", description="任务审核拒绝原因"),
-     *                 @OA\Property(property="video_check_status", type="string", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
+     *                 @OA\Property(property="video_check_status", type="integer", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "cover", "play_count", "forward_count"},
