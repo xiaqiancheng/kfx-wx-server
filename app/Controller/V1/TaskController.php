@@ -300,7 +300,7 @@ class TaskController extends AbstractController
         }
 
         // 视频榜单
-        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1, 'video_check_status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
         $data['max_video_info'] = $videoList['list'];
 
         return $this->response->success($data);
