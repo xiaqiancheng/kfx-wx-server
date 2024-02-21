@@ -258,6 +258,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="commission", type="integer", description="额外奖励（分）"),
      *                 @OA\Property(property="collection_status", type="integer", description="任务领取审核状态 -1未领取 0待审核，1已审核，2审核未通过"),
      *                 @OA\Property(property="reject_reason", type="string", description="任务审核拒绝原因"),
+     *                 @OA\Property(property="reject_time", type="string", description="任务审核拒绝时间"),
      *                 @OA\Property(property="video_check_status", type="integer", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
@@ -295,10 +296,11 @@ class TaskController extends AbstractController
         $data['video_check_status'] = -1;
 
         if ($userInfo) {
-            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason']);
+            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at']);
             if ($result) {
                 $data['collection_status'] = $result['status'];
                 $data['reject_reason'] = $result['reject_reason'];
+                $data['reject_time'] = $result['updated_at'];
             }
 
             $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status']);
