@@ -34,8 +34,7 @@ class FileService
         if ($driver == 'local') {
             //获取域名
             $result['path'] = '/upload/'.$name;
-            $urlArr = explode('//', request()->url());
-            $result['fullurl'] = $urlArr[0].'//'.explode('/', $urlArr[1])[0] . $result['path'];
+            $result['fullurl'] = env('HOST') . $result['path'];
         }
         
         return $result;
