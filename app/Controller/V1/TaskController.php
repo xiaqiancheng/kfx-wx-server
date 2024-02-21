@@ -9,9 +9,17 @@ use App\Repositories\VideoRepository;
 use App\Services\TaskService;
 use OpenApi\Annotations as OA;
 use App\Repositories\TaskCollectionRepository;
+use Hyperf\Di\Annotation\Inject;
+use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 
 class TaskController extends AbstractController
 {
+    /**
+     * @Inject
+     * @var ValidatorFactoryInterface
+     */
+    protected $validationFactory;
+
     /**
      * @OA\Get(
      *     path="/wxapi/task/tags",
@@ -406,5 +414,89 @@ class TaskController extends AbstractController
         ];
 
         return $this->response->success($list);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/apply",
+     *     tags={"任务"},
+     *     summary="任务申领",
+     *     description="任务申领",
+     *     operationId="TaskController_apply",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id", "reserve_time"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID"),
+     *             @OA\Property(property="shop_id", type="integer", description="店铺ID"),
+     *             @OA\Property(property="reserve_time", type="string", description="预约时间 如2023-04-02 23:12:32"),
+     *             @OA\Property(property="extra_cost", type="float", description="额外费用（元）"),
+     *             @OA\Property(property="remark", type="string", description="备注")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function apply()
+    {
+        $request = $this->request->inputs(['task_id', 'shop_id', 'reserve_time', 'extra_cost', 'remark']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required',
+                'reserve_time' => 'required'
+            ],
+            [
+                'task_id.required' => '任务id必须',
+                'reserve_time.required' => '预约时间必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+        if ($data['status'] !== 1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
+        }
+
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['status', 'reject_reason']);
+        if ($result) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已申领');
+        }
+
+        $saveData = [
+            'task_id' => $request['task_id'],
+            'blogger_id' => $user->id,
+            'shop_id' => intval($request['shop_id'] ?? 0),
+            'reserve_time' => $request['reserve_time'],
+            'extra_cost' => bcmul((string)($request['extra_cost'] ?? 0), '100'),
+            'remark' => $request['remark'] ?? ''
+        ];
+
+        try {
+            TaskCollectionRepository::instance()->saveData($saveData);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务申领失败');
+        }
+
+        return $this->response->success([], '任务申领成功');
     }
 }
