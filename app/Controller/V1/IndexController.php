@@ -86,14 +86,14 @@ class IndexController extends AbstractController
                 ],
             ],
             'featured_ad' => [
-                [
-                    'image_url' => 'http://kfccdn.xiuyan.info/uploads/1@2x.png',
-                    'redirect_type' => 0,
-                    'redirect_url' => '',
-                    'appid' => '',
-                    'name' => '',
-                    'desc' => ''
-                ],
+                // [
+                //     'image_url' => 'http://kfccdn.xiuyan.info/uploads/1@2x.png',
+                //     'redirect_type' => 0,
+                //     'redirect_url' => '',
+                //     'appid' => '',
+                //     'name' => '',
+                //     'desc' => ''
+                // ],
                 [
                     'image_url' => 'http://kids.kfc.com.cn/images/qqly.png',
                     'redirect_type' => 3,
