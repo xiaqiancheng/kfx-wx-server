@@ -154,7 +154,7 @@ class TaskController extends AbstractController
         $pageSize = $this->request->input('page_size', 20);
         $params = $this->request->inputs(['start_month', 'end_month', 'task_name', 'task_settle_type', 'form', 'content', 'sort']);
 
-        $filter = [];
+        $filter = ['stauts' => 1];
         if ($params['start_month'] ?? '' && $params['start_month'] ?? '') {
             if ($params['start_month'] && $params['start_month']) {
                 $filter['create_time'] = ['between', [strtotime($params['start_month'].'-01'), strtotime(date('Y-m-d', strtotime('-1 day', strtotime("+1 months", strtotime($params['end_month'])))).'23:59:59')]];
