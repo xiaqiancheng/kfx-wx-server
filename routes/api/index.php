@@ -8,4 +8,6 @@ Router::addGroup('/wxapi/', function () {
    Router::get('news/list', 'App\Controller\V1\IndexController@newsList');
 
    Router::get('shop/list', 'App\Controller\V1\IndexController@shopList');
+
+   Router::post('upload', 'App\Controller\V1\IndexController@upload');
 });

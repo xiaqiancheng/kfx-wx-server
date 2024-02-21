@@ -11,8 +11,11 @@ declare(strict_types=1);
  */
 namespace App\Controller\V1;
 
+use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
+use App\Exception\BusinessException;
 use App\Repositories\ShopRepository;
+use App\Services\FileService;
 use OpenApi\Annotations as OA;
 
 class IndexController extends AbstractController
@@ -278,5 +281,45 @@ class IndexController extends AbstractController
         $list = ShopRepository::instance()->getList($filter, ['id', 'name'], $page, $pageSize, ['id' => 'desc']);
 
         return $this->response->success($list);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/upload",
+     *     summary="文件上传",
+     *     description="文件上传",
+     *     operationId="IndexController_upload",
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"file"},
+     *             @OA\Property(property="file", type="file", description="文件"),
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"path", "fullurl"},
+     *                 @OA\Property(property="path", type="string", description="文件路径"),
+     *                 @OA\Property(property="fullurl", type="string", description="文件url")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function upload()
+    {
+        $file = $this->request->file('file');
+        
+        if (empty($file)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '请选择文件');
+        }
+
+        $fileService = new FileService();
+        $result = $fileService->upload($file);
+
+        return $this->response->success($result);
     }
 }
