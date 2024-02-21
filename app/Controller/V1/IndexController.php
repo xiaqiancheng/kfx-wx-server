@@ -126,6 +126,9 @@ class IndexController extends AbstractController
      *     @OA\Parameter(name="page_size", in="query", description="每页数量",
      *         @OA\Schema(type="interger")
      *     ),
+     *     @OA\Parameter(name="type", in="query", description="文章类型 1新手教学 2常见问题",
+     *         @OA\Schema(type="interger")
+     *     ),
      *     @OA\Response(response="200", description="文章列表返回",
      *         @OA\JsonContent(type="object",
      *             required={"errcode", "errmsg", "data"},
@@ -153,20 +156,22 @@ class IndexController extends AbstractController
         $page = $this->request->input('page', 1);
         $pageSize = $this->request->input('page_size', 20);
 
-        return $this->response->success([
-            'list' => [
+        $type = $this->request->input('type', 1);
+
+        $content = [];
+        if ($type == 1) {
+            $content = [
                 [
-                    'time' => '2024-01-06 20:39',
-                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
-                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
-                    'url' => 'http://www.baidu.com'
+                    'time' => '2024-01-05 20:39',
+                    'name' => '新手教程4',
+                    'description' => '新手教程4新手教程4新手教程4新手教程4新手教程4',
+                    'url' => ''
                 ],
                 [
-                    'id' => 2,
-                    'time' => '2024-01-05 20:39',
-                    'name' => 'wx.getUserProfile调用报错？',
-                    'description' => 'wx.getUserProfile调用报错',
-                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000c0e3f040628cba2408b12a64c00'
+                    'time' => '2024-01-03 20:39',
+                    'name' => '新手教程2',
+                    'description' => '新手教程2新手教程2新手教程2新手教程2新手教程2',
+                    'url' => 'http://www.baidu.com'
                 ],
                 [
                     'time' => '2024-01-04 20:39',
@@ -182,11 +187,49 @@ class IndexController extends AbstractController
                 ],
                 [
                     'time' => '2024-01-02 20:39',
+                    'name' => '新手教程1',
+                    'description' => '新手教程1新手教程1新手教程1新手教程1新手教程1',
+                    'url' => ''
+                ]
+            ];
+        }
+
+        if ($type == 2) {
+            $content = [
+                [
+                    'time' => '2024-01-08 20:39',
+                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
+                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'time' => '2024-01-07 20:39',
+                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
+                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'time' => '2024-01-06 20:39',
+                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
+                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
+                    'url' => 'http://www.baidu.com'
+                ],
+                [
+                    'time' => '2024-01-05 20:39',
+                    'name' => 'wx.getUserProfile调用报错？',
+                    'description' => 'wx.getUserProfile调用报错',
+                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000c0e3f040628cba2408b12a64c00'
+                ],
+                [
+                    'time' => '2024-01-02 20:39',
                     'name' => '常见问题',
                     'description' => '问题问题问题问题问题问题问题问题问题问题问题问题问题',
                     'url' => 'https://developers.weixin.qq.com/community/develop/doc/000000f02c86a8e2dc40db62661800'
-                ],
-            ],
+                ]
+            ];
+        }
+        return $this->response->success([
+            'list' => $content,
             'total_count' => 5
         ]);
     }
