@@ -594,4 +594,90 @@ class TaskController extends AbstractController
 
         return $this->response->success([], '视频提交成功');
     }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/video/data",
+     *     tags={"任务"},
+     *     summary="视频数据提交",
+     *     description="视频数据提交",
+     *     operationId="TaskController_addVideoData",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id", "video_captures"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID"),
+     *             @OA\Property(property="video_captures", type="string", description="视频截图"),
+     *             @OA\Property(property="comment_count", type="integer", description="评论数量"),
+     *             @OA\Property(property="forward_count", type="integer", description="转发数量"),
+     *             @OA\Property(property="play_count", type="integer", description="播放数量")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function addVideoData()
+    {
+        $request = $this->request->inputs(['task_id', 'video_captures', 'comment_count', 'forward_count', 'play_count']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required',
+                'video_captures' => 'required',
+            ],
+            [
+                'task_id.required' => '任务id必须',
+                'video_captures.required' => '视频截图必须',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+        if ($data['status'] !== 1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
+        }
+
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'status']);
+        if (empty($result1)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频未提交');
+        }
+        if ($result1['status'] == 0) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频还在审核中');
+        }
+
+        $saveData = [
+            'id' => $result1['id'],
+            'video_captures' => $request['video_captures'],
+            'comment_count' => intval($request['comment_count'] ?? 0),
+            'forward_count' => intval($request['forward_count'] ?? 0),
+            'play_count' => intval($request['play_count'] ?? 0)
+        ];
+
+        try {
+            VideoRepository::instance()->saveData($saveData);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频数据提交失败');
+        }
+
+        return $this->response->success([], '视频数据提交成功');
+    }
 }

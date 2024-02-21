@@ -19,6 +19,7 @@ Router::addGroup('/wxapi/', function () {
 Router::addGroup('/wxapi/', function () {
     Router::post('task/apply', 'App\Controller\V1\TaskController@apply');
     Router::post('task/video', 'App\Controller\V1\TaskController@video');
+    Router::post('task/video/data', 'App\Controller\V1\TaskController@addVideoData');
  }, [
     'middleware' => [
        App\Middleware\Auth\LoginAuthMiddleware::class
