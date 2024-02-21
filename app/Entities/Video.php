@@ -27,6 +27,8 @@ use Belief\Hyperf\Database\Entity;
  */
 class Video extends Entity
 {
+    public $timestamps = false;
+    
     /**
      * The table associated with the model.
      *

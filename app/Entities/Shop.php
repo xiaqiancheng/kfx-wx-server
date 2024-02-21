@@ -12,7 +12,7 @@ use Belief\Hyperf\Database\Entity;
  */
 class Shop extends Entity
 {
-    public $timestamp = false;
+    public $timestamps = false;
     
     /**
      * The table associated with the model.

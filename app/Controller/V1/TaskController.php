@@ -162,7 +162,7 @@ class TaskController extends AbstractController
         $pageSize = $this->request->input('page_size', 20);
         $params = $this->request->inputs(['start_month', 'end_month', 'task_name', 'task_settle_type', 'form', 'content', 'sort']);
 
-        $filter = ['stauts' => 1];
+        $filter = ['status' => 1];
         if ($params['start_month'] ?? '' && $params['start_month'] ?? '') {
             if ($params['start_month'] && $params['start_month']) {
                 $filter['create_time'] = ['between', [strtotime($params['start_month'].'-01'), strtotime(date('Y-m-d', strtotime('-1 day', strtotime("+1 months", strtotime($params['end_month'])))).'23:59:59')]];
@@ -296,14 +296,14 @@ class TaskController extends AbstractController
         $data['video_check_status'] = -1;
 
         if ($userInfo) {
-            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at']);
+            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at'], ['id' => 'desc']);
             if ($result) {
                 $data['collection_status'] = $result['status'];
                 $data['reject_reason'] = $result['reject_reason'];
                 $data['reject_time'] = $result['updated_at'];
             }
 
-            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status']);
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status'], ['id' => 'desc']);
             if ($result1) {
                 $data['video_check_status'] = $result1['status'];
             }
@@ -500,5 +500,98 @@ class TaskController extends AbstractController
         }
 
         return $this->response->success([], '任务申领成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/video",
+     *     tags={"任务"},
+     *     summary="提交任务视频",
+     *     description="提交任务视频",
+     *     operationId="TaskController_video",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id", "cover", "video_link"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID"),
+     *             @OA\Property(property="cover", type="string", description="视频封面链接"),
+     *             @OA\Property(property="video_link", type="string", description="视频链接"),
+     *             @OA\Property(property="remark", type="string", description="备注")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function video()
+    {
+        $request = $this->request->inputs(['task_id', 'cover', 'video_link', 'remark']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required',
+                'cover' => 'required',
+                'video_link' => 'required'
+            ],
+            [
+                'task_id.required' => '任务id必须',
+                'cover.required' => '视频封面必须',
+                'video_link.required' => '视频链接必须',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+        if ($data['status'] !== 1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
+        }
+
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['status', 'reject_reason']);
+        if (empty($result)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
+        }
+        if ($result['status'] == 0) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还在审核中');
+        }
+
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['status']);
+        if ($result1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频已提交');
+        }
+
+        $saveData = [
+            'task_id' => $request['task_id'],
+            'blogger_id' => $user->id,
+            'cover' => $request['cover'],
+            'video_link' => $request['video_link'],
+            'remark' => $request['remark'] ?? '',
+            'create_time' => time()
+        ];
+
+        try {
+            VideoRepository::instance()->saveData($saveData);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频提交失败');
+        }
+
+        return $this->response->success([], '视频提交成功');
     }
 }
