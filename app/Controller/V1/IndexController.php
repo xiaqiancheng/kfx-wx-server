@@ -44,7 +44,7 @@ class IndexController extends AbstractController
      *                     @OA\Items(type="object", 
      *                          required={"image_url", "redirect_type", "redirect_url", "appid", "name", "desc"},
      *                          @OA\Property(property="image_url", type="string", description="图片url"),
-     *                          @OA\Property(property="redirect_type", type="integer", description="跳转类型 0不跳转 1小程序 2外链"),
+     *                          @OA\Property(property="redirect_type", type="integer", description="跳转类型 0不跳转 1小程序 2外链 3视频"),
      *                          @OA\Property(property="redirect_url", type="string", description="小程序页面或链接"),
      *                          @OA\Property(property="appid", type="string", description="小程序APPID"),
      *                          @OA\Property(property="name", type="string", description="标题"),
@@ -96,16 +96,16 @@ class IndexController extends AbstractController
                 ],
                 [
                     'image_url' => 'http://kids.kfc.com.cn/images/qqly.png',
-                    'redirect_type' => 0,
-                    'redirect_url' => '',
+                    'redirect_type' => 3,
+                    'redirect_url' => 'https://kfc.xiuyan.info/video/1.mp4',
                     'appid' => '',
                     'name' => '儿童乐园',
                     'desc' => '快乐肯德基欢乐庆生！'
                 ],
                 [
                     'image_url' => 'http://www.kfc.com.cn/kfccda/ImgFile/201202/121727_919079.jpg',
-                    'redirect_type' => 0,
-                    'redirect_url' => '',
+                    'redirect_type' => 3,
+                    'redirect_url' => 'https://kfc.xiuyan.info/video/2.mp4',
                     'appid' => '',
                     'name' => '天天运动',
                     'desc' => '快来肯德基欢乐庆生！'
