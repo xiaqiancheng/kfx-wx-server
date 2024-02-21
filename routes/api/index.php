@@ -18,4 +18,6 @@ Router::addGroup('/wxapi/', function () {
    Router::get('task/history/{taskId:\d+}', 'App\Controller\V1\TaskController@getHistoryList');
 
    Router::get('news/list', 'App\Controller\V1\IndexController@newsList');
+
+   Router::get('shop/list', 'App\Controller\V1\IndexController@shopList');
 });
