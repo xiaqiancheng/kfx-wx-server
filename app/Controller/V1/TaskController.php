@@ -523,6 +523,7 @@ class TaskController extends AbstractController
      *         @OA\JsonContent(type="object",
      *             required={"task_id", "cover", "video_link"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
+     *             @OA\Property(property="title", type="string", description="视频标题"),
      *             @OA\Property(property="cover", type="string", description="视频封面链接"),
      *             @OA\Property(property="video_link", type="string", description="视频链接"),
      *             @OA\Property(property="remark", type="string", description="备注")
@@ -539,7 +540,7 @@ class TaskController extends AbstractController
      */
     public function video()
     {
-        $request = $this->request->inputs(['task_id', 'cover', 'video_link', 'remark']);
+        $request = $this->request->inputs(['task_id', 'title', 'cover', 'video_link', 'remark']);
 
         $validator = $this->validationFactory->make(
             $request,
@@ -587,6 +588,7 @@ class TaskController extends AbstractController
         $saveData = [
             'task_id' => $request['task_id'],
             'blogger_id' => $user->id,
+            'title' => $request['title'] ?? '',
             'cover' => $request['cover'],
             'video_link' => $request['video_link'],
             'remark' => $request['remark'] ?? '',
