@@ -475,12 +475,12 @@ class TaskController extends AbstractController
         $user = $this->request->getAttribute('auth');
 
         $service = new TaskService();
-        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'task_start_time', 'task_end_time', 'status']);
         if (empty($data)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
         }
-        if ($data['status'] !== 1) {
-            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
+        if ($data['status'] !== 1 || $data['task_start_time'] > time() || $data['task_end_time'] < time()) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效或者任务未开始或已结束');
         }
 
         $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['status', 'reject_reason']);
