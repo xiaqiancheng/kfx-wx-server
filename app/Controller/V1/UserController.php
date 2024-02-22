@@ -11,6 +11,8 @@ use Hyperf\Di\Annotation\Inject;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use App\Repositories\VideoRepository;
 use App\Repositories\TaskRepository;
+use App\Services\QRcodeService;
+use Endroid\QrCode\QrCode;
 
 class UserController extends AbstractController
 {
@@ -169,6 +171,38 @@ class UserController extends AbstractController
             'income' => $user->income,
             'is_douyin_authorize' => empty($user->doyin_id) ? 0 : 1
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/dyauth-code",
+     *     tags={"用户"},
+     *     summary="生成抖音授权码",
+     *     description="生成抖音授权码",
+     *     operationId="UserController_douyinAuthCode",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="string", description="base64")
+     *         )
+     *     )
+     * )
+     */
+    public function douyinAuthCode()
+    {
+        $user = $this->request->getAttribute('auth');
+
+        $url = env('HOST') . '/dy_authorize/?code=' . urlencode($user->openid);
+
+		$qr = new QRcodeService;
+        $base64 = $qr->create($url);
+
+        return $this->response->success($base64);
     }
 
     /**
