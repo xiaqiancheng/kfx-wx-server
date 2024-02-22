@@ -432,7 +432,7 @@ class TaskController extends AbstractController
      *         @OA\JsonContent(type="object",
      *             required={"task_id", "reserve_time"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
-     *             @OA\Property(property="shop_id", type="integer", description="店铺ID"),
+     *             @OA\Property(property="shop_name", type="string", description="店铺名称"),
      *             @OA\Property(property="reserve_time", type="string", description="预约时间 如2023-04-02 23:12:32"),
      *             @OA\Property(property="extra_cost", type="float", description="额外费用（元）"),
      *             @OA\Property(property="remark", type="string", description="备注")
@@ -449,7 +449,7 @@ class TaskController extends AbstractController
      */
     public function apply()
     {
-        $request = $this->request->inputs(['task_id', 'shop_id', 'reserve_time', 'extra_cost', 'remark']);
+        $request = $this->request->inputs(['task_id', 'shop_id', 'shop_name', 'reserve_time', 'extra_cost', 'remark']);
 
         $validator = $this->validationFactory->make(
             $request,
@@ -488,6 +488,7 @@ class TaskController extends AbstractController
             'task_id' => $request['task_id'],
             'blogger_id' => $user->id,
             'shop_id' => intval($request['shop_id'] ?? 0),
+            'shop_name' => $request['shop_name'] ?? '',
             'reserve_time' => $request['reserve_time'],
             'extra_cost' => bcmul((string)($request['extra_cost'] ?? 0), '100'),
             'remark' => $request['remark'] ?? ''

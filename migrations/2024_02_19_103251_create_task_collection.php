@@ -16,6 +16,7 @@ class CreateTaskCollection extends Migration
             $table->bigInteger('task_id')->comment('任务ID');
             $table->bigInteger('blogger_id')->comment('博主ID');
             $table->bigInteger('shop_id')->default(0)->comment('店铺ID');
+            $table->string('shop_name')->default('')->comment('店铺名称');
             $table->dateTime('reserve_time')->comment('预约时间');
             $table->integer('extra_cost')->default(0)->comment('额外费用（分）');
             $table->string('remark')->default('')->comment('备注');
