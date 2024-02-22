@@ -139,7 +139,7 @@ class TaskController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit"},
+     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit", "task_start_time", "task_end_time"},
      *                          @OA\Property(property="id", type="integer", description="id"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
      *                          @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成 2-支付交易CPS"),
@@ -148,7 +148,9 @@ class TaskController extends AbstractController
      *                          @OA\Property(property="task_icon", type="string", description="任务图标"),
      *                          @OA\Property(property="task_tags", type="object", description="任务标签"),
      *                          @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
-     *                          @OA\Property(property="profit", type="integer", description="最大收益（分）")
+     *                          @OA\Property(property="profit", type="integer", description="最大收益（分）"),
+     *                          @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
+     *                          @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -203,7 +205,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit'],  $page, $pageSize, $sort);
+        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
         // //var_dump($list);
