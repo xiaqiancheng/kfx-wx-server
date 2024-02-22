@@ -824,6 +824,10 @@ class TaskController extends AbstractController
         $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['extra_cost']);
         $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'status']);
 
+        if (empty($result) || empty($result1)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务结算失败');
+        }
+
         $saveData = [
             'id' => $result1['id'],
             'is_balance' => 2
