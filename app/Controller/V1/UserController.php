@@ -147,11 +147,12 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"avatarUrl", "nickName", "level", "income"},
+     *                 required={"avatarUrl", "nickName", "level", "income", "is_douyin_authorize"},
      *                 @OA\Property(property="avatarUrl", type="string", description="头像"),
      *                 @OA\Property(property="nickName", type="string", description="昵称"),
      *                 @OA\Property(property="level", type="integer", description="级别"),
-     *                 @OA\Property(property="income", type="integer", description="收入（分）")
+     *                 @OA\Property(property="income", type="integer", description="收入（分）"),
+     *                 @OA\Property(property="is_douyin_authorize", type="integer", description="抖音授权 0否 1是")
      *             )
      *         )
      *     )
@@ -165,7 +166,8 @@ class UserController extends AbstractController
             'avatarUrl' => $user->avatarUrl,
             'nickName' => $user->nickName,
             'level' => $user->level,
-            'income' => $user->income
+            'income' => $user->income,
+            'is_douyin_authorize' => empty($user->doyin_id) ? 0 : 1
         ]);
     }
 
