@@ -4,6 +4,7 @@ namespace App\Controller\V1;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
+use App\Repositories\BloggerRepository;
 use App\Repositories\TagRepository;
 use App\Repositories\VideoRepository;
 use App\Services\TaskService;
@@ -242,7 +243,7 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "collection_status", "reject_reason", "video_check_status", "max_video_info"},
+     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
@@ -260,6 +261,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="reject_reason", type="string", description="任务审核拒绝原因"),
      *                 @OA\Property(property="reject_time", type="string", description="任务审核拒绝时间"),
      *                 @OA\Property(property="video_check_status", type="integer", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
+     *                 @OA\Property(property="is_balance", type="integer", description="是否结算  0任务中 1待结算 2已结算"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "cover", "play_count", "forward_count"},
@@ -294,6 +296,7 @@ class TaskController extends AbstractController
         $data['reject_reason'] = '';
         // 视频审核状态
         $data['video_check_status'] = -1;
+        $data['is_balance'] = -1;
 
         if ($userInfo) {
             $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at'], ['id' => 'desc']);
@@ -303,9 +306,10 @@ class TaskController extends AbstractController
                 $data['reject_time'] = $result['updated_at'];
             }
 
-            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status'], ['id' => 'desc']);
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'is_balance'], ['id' => 'desc']);
             if ($result1) {
                 $data['video_check_status'] = $result1['status'];
+                $data['is_balance'] = $result1['is_balance'];
             }
         }
 
@@ -664,13 +668,17 @@ class TaskController extends AbstractController
         if ($result1['status'] == 0) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '视频还在审核中');
         }
+        if ($result1['is_balance'] == 1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '视频数据已提交');
+        }
 
         $saveData = [
             'id' => $result1['id'],
             'video_captures' => $request['video_captures'],
             'comment_count' => intval($request['comment_count'] ?? 0),
             'forward_count' => intval($request['forward_count'] ?? 0),
-            'play_count' => intval($request['play_count'] ?? 0)
+            'play_count' => intval($request['play_count'] ?? 0),
+            'is_balance' => 1
         ];
 
         try {
@@ -755,5 +763,77 @@ class TaskController extends AbstractController
         }
 
         return $this->response->success([], '任务取消成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/video/settle",
+     *     tags={"任务"},
+     *     summary="费用结算",
+     *     description="费用结算",
+     *     operationId="TaskController_videoSettle",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function videoSettle()
+    {
+        $request = $this->request->inputs(['task_id']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required'
+            ],
+            [
+                'task_id.required' => '任务id必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['extra_cost']);
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'status']);
+
+        $saveData = [
+            'id' => $result1['id'],
+            'is_balance' => 2
+        ];
+
+        try {
+            VideoRepository::instance()->saveData($saveData);
+
+            // 写明细
+            BloggerRepository::instance()->addScore($user->id, $result['extra_cost'], '视频推销任务', $request['task_id']);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务结算失败');
+        }
+
+        return $this->response->success([], '任务结算成功');
     }
 }

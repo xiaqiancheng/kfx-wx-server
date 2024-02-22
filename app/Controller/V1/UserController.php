@@ -421,10 +421,15 @@ class UserController extends AbstractController
 
         $filter = [
             'blogger_id' => $user->id,
-            'status' => 1
+            'status' => ['in', [0, 1]]
         ];
 
-        if (in_array($status, [1, 2, 3])) {
+        // 任务中
+        if ($status == 1) {
+            $filter['is_balance'] = 0;
+        }
+
+        if (in_array($status, [2, 3])) {
             $filter['is_balance'] = $status - 1;
         }
 
