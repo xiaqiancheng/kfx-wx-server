@@ -436,7 +436,7 @@ class TaskController extends AbstractController
      *     ),
      *     @OA\RequestBody(description="请求body",
      *         @OA\JsonContent(type="object",
-     *             required={"task_id", "reserve_time"},
+     *             required={"task_id"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
      *             @OA\Property(property="shop_name", type="string", description="店铺名称"),
      *             @OA\Property(property="reserve_time", type="string", description="预约时间 如2023-04-02 23:12:32"),
@@ -460,12 +460,10 @@ class TaskController extends AbstractController
         $validator = $this->validationFactory->make(
             $request,
             [
-                'task_id' => 'required',
-                'reserve_time' => 'required'
+                'task_id' => 'required'
             ],
             [
-                'task_id.required' => '任务id必须',
-                'reserve_time.required' => '预约时间必须'
+                'task_id.required' => '任务id必须'
             ]
         );
 
@@ -495,10 +493,12 @@ class TaskController extends AbstractController
             'blogger_id' => $user->id,
             'shop_id' => intval($request['shop_id'] ?? 0),
             'shop_name' => $request['shop_name'] ?? '',
-            'reserve_time' => $request['reserve_time'],
             'extra_cost' => bcmul((string)($request['extra_cost'] ?? 0), '100'),
             'remark' => $request['remark'] ?? ''
         ];
+        if ($request['reserve_time']) {
+            $saveData['reserve_time'] = $request['reserve_time'];
+        }
 
         try {
             TaskCollectionRepository::instance()->saveData($saveData);
