@@ -681,4 +681,79 @@ class TaskController extends AbstractController
 
         return $this->response->success([], '视频数据提交成功');
     }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/cancel",
+     *     tags={"任务"},
+     *     summary="任务取消",
+     *     description="任务取消",
+     *     operationId="TaskController_addVideoData",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function cancel()
+    {
+        $request = $this->request->inputs(['task_id']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required'
+            ],
+            [
+                'task_id.required' => '任务id必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1, 2]]], ['id', 'status', 'reject_reason'], ['id' => 'desc']);
+        if (empty($result)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
+        }
+
+        if (in_array($result['status'], [1, 2])) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已审核或者任务已被拒绝');
+        }
+
+        $saveData = [
+            'id' => $result['id'],
+            'status' => 3
+        ];
+
+        try {
+            TaskCollectionRepository::instance()->saveData($saveData);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务取消失败');
+        }
+
+        return $this->response->success([], '任务取消成功');
+    }
 }
