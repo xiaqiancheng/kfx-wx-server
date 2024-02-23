@@ -287,11 +287,9 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance']);
     
-        $data['payment_allocate_ratio'] = 1; // 达人分成比例
-        $data['audit_requirement'] = '审核要求'; // 审核要求
-        $data['creative_guidance'] = '创作指导'; // 创作指导
+        $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 
         // 任务领取状态
         $data['collection_status'] = -1;
