@@ -749,8 +749,8 @@ class TaskController extends AbstractController
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
         }
 
-        if (in_array($result['status'], [1, 2])) {
-            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已审核或者任务已被拒绝');
+        if (in_array($result['status'], [2])) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已被拒绝');
         }
 
         $saveData = [
