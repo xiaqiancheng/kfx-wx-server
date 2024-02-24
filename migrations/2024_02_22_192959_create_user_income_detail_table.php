@@ -17,6 +17,7 @@ class CreateUserIncomeDetailTable extends Migration
             $table->bigInteger('task_id')->default(0)->comment('任务ID');
             $table->integer('amount')->default(0)->comment('收入');
             $table->string('name')->default('')->comment('描述');
+            $table->timestamps();
         });
     }
 

@@ -4,6 +4,7 @@ namespace App\Controller\V1;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
+use App\Repositories\MessageNoticeRepository;
 use App\Services\UserService;
 use OpenApi\Annotations as OA;
 use HyperfExt\Auth\AuthManager;
@@ -11,6 +12,7 @@ use Hyperf\Di\Annotation\Inject;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use App\Repositories\VideoRepository;
 use App\Repositories\TaskRepository;
+use App\Repositories\UserIncomeDetailRepository;
 use App\Services\QRcodeService;
 use Endroid\QrCode\QrCode;
 
@@ -230,7 +232,8 @@ class UserController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="收益数据",
      *                     @OA\Items(type="object", 
-     *                          required={"date", "name", "amount"},
+     *                          required={"task_id", "date", "name", "amount"},
+     *                          @OA\Property(property="task_id", type="integer", description="任务id"),
      *                          @OA\Property(property="date", type="string", description="日期"),
      *                          @OA\Property(property="name", type="string", description="名称"),
      *                          @OA\Property(property="amount", type="integer", description="收益（分）")
@@ -247,36 +250,10 @@ class UserController extends AbstractController
         $page = $this->request->input('page', 1);
         $pageSize = $this->request->input('page_size', 20);
 
-        return $this->response->success([
-            'list' => [
-                [
-                    'date' => '2024-01-06',
-                    'name' => '视频推销任务6',
-                    'amount' => 5000
-                ],
-                [
-                    'date' => '2024-01-05',
-                    'name' => '视频推销任务1',
-                    'amount' => 2000
-                ],
-                [
-                    'date' => '2024-01-04',
-                    'name' => '视频推销任务2',
-                    'amount' => 3000
-                ],
-                [
-                    'date' => '2024-01-03',
-                    'name' => '视频推销任务',
-                    'amount' => 1200
-                ],
-                [
-                    'date' => '2024-01-02',
-                    'name' => '视频推销任务1',
-                    'amount' => 5000
-                ],
-            ],
-            'total_count' => 5
-        ]);
+        $user = $this->request->getAttribute('auth');
+
+        $list = UserIncomeDetailRepository::instance()->getList(['blogger_id' => $user->id], ['id', 'task_id', 'created_at as date', 'name', 'amount'], $page, $pageSize, ['id' => 'desc']);
+        return $this->response->success($list);
     }
 
     /**
@@ -304,8 +281,9 @@ class UserController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="通知数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "time", "name", "description", "status"},
+     *                          required={"id", "task_id", "time", "name", "description", "status"},
      *                          @OA\Property(property="id", type="integer", description="消息id"),
+     *                          @OA\Property(property="task_id", type="integer", description="任务id"),
      *                          @OA\Property(property="time", type="string", description="时间"),
      *                          @OA\Property(property="name", type="string", description="名称"),
      *                          @OA\Property(property="description", type="string", description="描述"),
@@ -323,46 +301,10 @@ class UserController extends AbstractController
         $page = $this->request->input('page', 1);
         $pageSize = $this->request->input('page_size', 20);
 
-        return $this->response->success([
-            'list' => [
-                [
-                    'id' => 1,
-                    'time' => '2024-01-06 20:39',
-                    'name' => '视频审核通过',
-                    'description' => '视频审核通过视频审核通过视频审核通过视频审核通过',
-                    'status' => 0
-                ],
-                [
-                    'id' => 2,
-                    'time' => '2024-01-05 20:39',
-                    'name' => '视频审核通过',
-                    'description' => '视频审核通过视频审核通过视频审核通过视频审核通过',
-                    'status' => 0
-                ],
-                [
-                    'id' => 3,
-                    'time' => '2024-01-04 20:39',
-                    'name' => '视频审核通过',
-                    'description' => '视频审核通过视频审核通过视频审核通过视频审核通过',
-                    'status' => 0
-                ],
-                [
-                    'id' => 4,
-                    'time' => '2024-01-03 20:39',
-                    'name' => '视频审核通过',
-                    'description' => '视频审核通过视频审核通过视频审核通过视频审核通过',
-                    'status' => 0
-                ],
-                [
-                    'id' => 5,
-                    'time' => '2024-01-02 20:39',
-                    'name' => '视频审核通过',
-                    'description' => '视频审核通过视频审核通过视频审核通过视频审核通过',
-                    'status' => 1
-                ],
-            ],
-            'total_count' => 5
-        ]);
+        $user = $this->request->getAttribute('auth');
+
+        $list = MessageNoticeRepository::instance()->getList(['blogger_id' => $user->id], ['id', 'task_id', 'created_at as time', 'name', 'description', 'status'], $page, $pageSize, ['id' => 'desc']);
+        return $this->response->success($list);
     }
 
     /**
@@ -446,5 +388,44 @@ class UserController extends AbstractController
         }
 
         return $this->response->success($videoList);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/notice/read",
+     *     tags={"用户"},
+     *     summary="设置消息已读",
+     *     description="设置消息已读",
+     *     operationId="UserController_noticeRead",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"notice_id"},
+     *             @OA\Property(property="notice_id", type="integer", description="消息id")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function noticeRead()
+    {
+        $user = $this->request->getAttribute('auth');
+
+        $noticeId = $this->request->input('notice_id');
+        if (!$noticeId) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '消息ID必须');
+        }
+
+        MessageNoticeRepository::instance()->updateOneBy(['blogger_id' => $user->id, 'id' => $noticeId], ['status' => 1]);
+
+        return $this->response->success([], '成功');
     }
 }

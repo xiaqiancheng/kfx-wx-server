@@ -249,6 +249,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
+     *                 @OA\Property(property="detail", type="string", description="详细描述"),
      *                 @OA\Property(property="audit_requirement", type="string", description="审核要求"),
      *                 @OA\Property(property="creative_guidance", type="string", description="创作指导"),
      *                 @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成、2-支付分成（基础）、3-支付分成（绑定）、7-广告分成+支付分成（基础）、8-广告分成+支付分成（绑定）"),
@@ -287,7 +288,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance']);
     
         $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 
@@ -314,7 +315,7 @@ class TaskController extends AbstractController
         }
 
         // 视频榜单
-        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['income' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['play_count' => 'desc']);
         $data['max_video_info'] = $videoList['list'];
 
         return $this->response->success($data);
@@ -820,7 +821,7 @@ class TaskController extends AbstractController
         $user = $this->request->getAttribute('auth');
 
         $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['extra_cost']);
-        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'status']);
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'play_count', 'comment_count', 'forward_count', 'status']);
 
         if (empty($result) || empty($result1)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务结算失败');
@@ -835,7 +836,7 @@ class TaskController extends AbstractController
             VideoRepository::instance()->saveData($saveData);
 
             // 写明细
-            BloggerRepository::instance()->addScore($user->id, $result['extra_cost'], '视频推销任务', $request['task_id']);
+            BloggerRepository::instance()->addScore($user->id, $result['extra_cost'], '视频推销任务', $request['task_id'], $result1);
         } catch (\Throwable $e) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务结算失败');
         }

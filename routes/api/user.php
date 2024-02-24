@@ -13,6 +13,7 @@ Router::addGroup('/wxapi/', function () {
    Router::get('user/income/list', 'App\Controller\V1\UserController@incomeList');
    Router::get('user/notice/list', 'App\Controller\V1\UserController@noticeList');
    Router::get('user/video/list', 'App\Controller\V1\UserController@videoList');
+   Router::post('user/notice/read', 'App\Controller\V1\UserController@noticeRead');
 }, [
    'middleware' => [
       App\Middleware\Auth\LoginAuthMiddleware::class
