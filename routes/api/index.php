@@ -10,4 +10,6 @@ Router::addGroup('/wxapi/', function () {
    Router::get('shop/list', 'App\Controller\V1\IndexController@shopList');
 
    Router::post('upload', 'App\Controller\V1\IndexController@upload');
+
+   Router::post('webhooks', 'App\Controller\V1\IndexController@webhooks');
 });

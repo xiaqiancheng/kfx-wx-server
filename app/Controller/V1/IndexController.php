@@ -322,4 +322,25 @@ class IndexController extends AbstractController
 
         return $this->response->success($result);
     }
+
+public function webhooks()
+    {
+        $param = $this->request->input('content');
+         
+return $this->response->success($param);
+        if (empty($file)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '请选择文件');
+       }
+
+        $fileService = new FileService();
+        $result = $fileService->upload($file);
+
+        return $this->response->success($result);
+    }
+
+
+
+
+
+
 }
