@@ -14,6 +14,7 @@ namespace App\Controller\V1;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
+use App\Repositories\ArticleRepository;
 use App\Repositories\ShopRepository;
 use App\Services\FileService;
 use OpenApi\Annotations as OA;
@@ -162,80 +163,12 @@ class IndexController extends AbstractController
 
         $type = $this->request->input('type', 1);
 
-        $content = [];
-        if ($type == 1) {
-            $content = [
-                [
-                    'time' => '2024-01-05 20:39',
-                    'name' => '新手教程4',
-                    'description' => '新手教程4新手教程4新手教程4新手教程4新手教程4',
-                    'url' => ''
-                ],
-                [
-                    'time' => '2024-01-03 20:39',
-                    'name' => '新手教程2',
-                    'description' => '新手教程2新手教程2新手教程2新手教程2新手教程2',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-04 20:39',
-                    'name' => '新手教程3',
-                    'description' => '新手教程3新手教程3新手教程3新手教程3新手教程3新手教程3',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-03 20:39',
-                    'name' => '新手教程2',
-                    'description' => '新手教程2新手教程2新手教程2新手教程2新手教程2',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-02 20:39',
-                    'name' => '新手教程1',
-                    'description' => '新手教程1新手教程1新手教程1新手教程1新手教程1',
-                    'url' => ''
-                ]
-            ];
+        $list = ArticleRepository::instance()->getList(['type' => $type], ['id', 'name', 'description', 'created_at as time'], $page, $pageSize, ['id' => 'desc']);
+        foreach ($list['list'] as &$value) {
+            $value['url'] = env('HOST') . '/index/index/article?id=' . $value['id'];
         }
 
-        if ($type == 2) {
-            $content = [
-                [
-                    'time' => '2024-01-08 20:39',
-                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
-                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-07 20:39',
-                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
-                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-06 20:39',
-                    'name' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口？',
-                    'description' => '隐私授权同意的回调中不能直接调用wx.getUserProfile接口',
-                    'url' => 'http://www.baidu.com'
-                ],
-                [
-                    'time' => '2024-01-05 20:39',
-                    'name' => 'wx.getUserProfile调用报错？',
-                    'description' => 'wx.getUserProfile调用报错',
-                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000c0e3f040628cba2408b12a64c00'
-                ],
-                [
-                    'time' => '2024-01-02 20:39',
-                    'name' => '常见问题',
-                    'description' => '问题问题问题问题问题问题问题问题问题问题问题问题问题',
-                    'url' => 'https://developers.weixin.qq.com/community/develop/doc/000000f02c86a8e2dc40db62661800'
-                ]
-            ];
-        }
-        return $this->response->success([
-            'list' => $content,
-            'total_count' => 5
-        ]);
+        return $this->response->success($list);
     }
 
     /**
