@@ -18,6 +18,7 @@ class CreateMessageNoticeTable extends Migration
             $table->string('name')->default('')->comment('名称');
             $table->string('description')->default('')->comment('描述');
             $table->tinyInteger('status')->default(0)->comment('读取状态 0未读 1已读');
+            $table->timestamps();
         });
     }
 
