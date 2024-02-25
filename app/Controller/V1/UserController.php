@@ -4,6 +4,7 @@ namespace App\Controller\V1;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
+use App\Repositories\BloggerRepository;
 use App\Repositories\MessageNoticeRepository;
 use App\Services\UserService;
 use OpenApi\Annotations as OA;
@@ -427,5 +428,53 @@ class UserController extends AbstractController
         MessageNoticeRepository::instance()->updateOneBy(['blogger_id' => $user->id, 'id' => $noticeId], ['status' => 1]);
 
         return $this->response->success([], '成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/profile/update",
+     *     tags={"用户"},
+     *     summary="修改用户基本信息",
+     *     description="修改用户基本信息",
+     *     operationId="UserController_profileUpdate",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={},
+     *             @OA\Property(property="nickName", type="string", description="昵称"),
+     *             @OA\Property(property="avatarUrl", type="string", description="头像")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function profileUpdate()
+    {
+        $request = $this->request->inputs(['nickName', 'avatarUrl']);
+        $userId = $this->request->getAttribute('auth')->id;
+
+        $data = [];
+        if (($request['nickName'] ?? '') && $request['nickName']) {
+            $data['nickName'] = $request['nickName'];
+        }
+        if (($request['avatarUrl'] ?? '') && $request['avatarUrl']) {
+            $data['avatarUrl'] = $request['avatarUrl'];
+        }
+
+        if ($data) {
+            $data['id'] = $userId;
+            $data['update_time'] = time();
+            BloggerRepository::instance()->saveData($data);
+        }
+
+        return $this->response->success([], '用户信息更新成功');
     }
 }
