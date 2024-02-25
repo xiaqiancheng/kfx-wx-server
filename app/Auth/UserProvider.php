@@ -48,6 +48,7 @@ class UserProvider implements UserProviderInterface
             $data['update_time'] = time();
         } else {
             $data['openid'] = $result['openid'];
+            $data['unionid'] = $result['unionid'] ?? '';
             $data['create_time'] = time();
             $data['update_time'] = time();
             $data['level'] = 1;
