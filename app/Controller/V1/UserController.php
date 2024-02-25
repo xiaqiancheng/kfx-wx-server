@@ -444,7 +444,9 @@ class UserController extends AbstractController
      *         @OA\JsonContent(type="object",
      *             required={},
      *             @OA\Property(property="nickName", type="string", description="昵称"),
-     *             @OA\Property(property="avatarUrl", type="string", description="头像")
+     *             @OA\Property(property="avatarUrl", type="string", description="头像"),
+     *             @OA\Property(property="name", type="string", description="姓名"),
+     *             @OA\Property(property="id_card", type="string", description="身份证")
      *         )
      *     ),
      *     @OA\Response(response="200", description="返回",
@@ -458,7 +460,7 @@ class UserController extends AbstractController
      */
     public function profileUpdate()
     {
-        $request = $this->request->inputs(['nickName', 'avatarUrl']);
+        $request = $this->request->inputs(['nickName', 'avatarUrl', 'name', 'id_card']);
         $userId = $this->request->getAttribute('auth')->id;
 
         $data = [];
@@ -467,6 +469,12 @@ class UserController extends AbstractController
         }
         if (($request['avatarUrl'] ?? '') && $request['avatarUrl']) {
             $data['avatarUrl'] = $request['avatarUrl'];
+        }
+        if (($request['name'] ?? '') && $request['name']) {
+            $data['name'] = $request['name'];
+        }
+        if (($request['id_card'] ?? '') && $request['id_card']) {
+            $data['id_card'] = $request['id_card'];
         }
 
         if ($data) {
