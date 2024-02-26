@@ -15,6 +15,7 @@ use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
 use App\Repositories\ArticleRepository;
+use App\Repositories\LevelCostTemplateRepository;
 use App\Repositories\ShopRepository;
 use App\Services\FileService;
 use OpenApi\Annotations as OA;
@@ -254,5 +255,42 @@ class IndexController extends AbstractController
         $result = $fileService->upload($file);
 
         return $this->response->success($result);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/cost-template/list",
+     *     summary="费用模板列表",
+     *     description="费用模板列表",
+     *     operationId="IndexController_getCostTemplateList",
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={""},
+     *                 @OA\Property(property="", type="array", description="key为模板ID",
+     *                     @OA\Items(type="object",
+     *                         required={"level_id", "cost"},
+     *                         @OA\Property(property="level_id", type="integer", description="级别ID"),
+     *                         @OA\Property(property="cost", type="integer", description="费用（分）")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getCostTemplateList()
+    {
+        $list = LevelCostTemplateRepository::instance()->getList([], ['*'], 0, 0, [], [], false);
+
+        $data = [];
+        foreach ($list['list'] as $value) {
+            $data[$value['template_id']][] = $value;
+        }
+
+        return $this->response->success($data);
     }
 }

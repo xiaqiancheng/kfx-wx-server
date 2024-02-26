@@ -26,8 +26,6 @@ class CreateArticleTable extends Migration
      */
     public function down(): void
     {
-        Schema::create('article', function (Blueprint $table) {
-            Schema::dropIfExists('article');
-        });
+        Schema::dropIfExists('article');
     }
 }
