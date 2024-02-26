@@ -152,7 +152,9 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"avatarUrl", "nickName", "level", "income", "is_douyin_authorize"},
+     *                 required={"openid", "unionid", "avatarUrl", "nickName", "level", "income", "is_douyin_authorize"},
+     *                 @OA\Property(property="openid", type="string", description="openid"),
+     *                 @OA\Property(property="unionid", type="string", description="unionid"),
      *                 @OA\Property(property="avatarUrl", type="string", description="头像"),
      *                 @OA\Property(property="nickName", type="string", description="昵称"),
      *                 @OA\Property(property="level", type="integer", description="级别"),
@@ -168,6 +170,8 @@ class UserController extends AbstractController
         $user = $this->request->getAttribute('auth');
 
         return $this->response->success([
+            'openid' => $user->openid,
+            'unionid' => $user->unionid,
             'avatarUrl' => $user->avatarUrl,
             'nickName' => $user->nickName,
             'level' => $user->level,
