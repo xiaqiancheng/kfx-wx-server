@@ -13,7 +13,7 @@ class TaskService
 
         if ($list['list']) {
             foreach($list['list'] as $k => $v) {
-                $list['list'][$k]['refer_ma_captures'] = explode(',', $v['refer_ma_captures']);
+                $list['list'][$k]['refer_ma_captures'] = !empty($v['refer_ma_captures']) ? explode(',', $v['refer_ma_captures']) : [];
             }
         }
 
