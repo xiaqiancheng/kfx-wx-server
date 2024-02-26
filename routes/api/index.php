@@ -12,4 +12,7 @@ Router::addGroup('/wxapi/', function () {
    Router::post('upload', 'App\Controller\V1\IndexController@upload');
 
    Router::post('webhooks', 'App\Controller\V1\IndexController@webhooks');
+
+   Router::get('cost-template/list', 'App\Controller\V1\IndexController@getCostTemplateList');
 });
+
