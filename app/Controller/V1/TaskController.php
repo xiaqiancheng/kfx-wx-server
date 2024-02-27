@@ -572,7 +572,7 @@ class TaskController extends AbstractController
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
         }
 
-        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['status', 'reject_reason']);
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'status', 'reject_reason']);
         if (empty($result)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
         }
@@ -587,6 +587,7 @@ class TaskController extends AbstractController
 
         $saveData = [
             'task_id' => $request['task_id'],
+            'task_collection_id' => $request['id'],
             'blogger_id' => $user->id,
             'title' => $request['title'] ?? '',
             'cover' => $request['cover'],
@@ -665,7 +666,7 @@ class TaskController extends AbstractController
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
         }
 
-        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'status']);
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'task_collection_id', 'status']);
         if (empty($result1)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '视频未提交');
         }
@@ -687,6 +688,11 @@ class TaskController extends AbstractController
 
         try {
             VideoRepository::instance()->saveData($saveData);
+
+            TaskCollectionRepository::instance()->saveData([
+                'id' => $result1['task_collection_id'],
+                'is_balance' => 1,
+            ]);
         } catch (\Throwable $e) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '视频数据提交失败');
         }
@@ -729,7 +735,7 @@ class TaskController extends AbstractController
                 'task_id' => 'required'
             ],
             [
-                'task_id.required' => '任务id必须'
+                'task_id.required' => '任务必id须'
             ]
         );
 
@@ -822,7 +828,7 @@ class TaskController extends AbstractController
         $user = $this->request->getAttribute('auth');
 
         $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['extra_cost']);
-        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'play_count', 'comment_count', 'forward_count', 'status']);
+        $result1 = VideoRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 1], ['id', 'task_collection_id', 'play_count', 'comment_count', 'forward_count', 'status']);
 
         if (empty($result) || empty($result1)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务结算失败');
@@ -836,6 +842,10 @@ class TaskController extends AbstractController
         try {
             VideoRepository::instance()->saveData($saveData);
 
+            TaskCollectionRepository::instance()->saveData([
+                'id' => $result1['task_collection_id'],
+                'is_balance' => 2,
+            ]);
             // 写明细
             BloggerRepository::instance()->addScore($user->id, $result['extra_cost'], '视频推销任务', $request['task_id'], $result1);
         } catch (\Throwable $e) {
