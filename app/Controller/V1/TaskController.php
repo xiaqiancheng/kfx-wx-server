@@ -139,10 +139,10 @@ class TaskController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit", "task_start_time", "task_end_time"},
+     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit", "task_start_time", "task_end_time", "payment_allocate_ratio"},
      *                          @OA\Property(property="id", type="integer", description="id"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
-     *                          @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成 2-支付交易CPS"),
+     *                          @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成、2-支付分成（基础）、3-支付分成（绑定）、7-广告分成+支付分成（基础）、8-广告分成+支付分成（绑定）"),
      *                          @OA\Property(property="start_page", type="string", description="小程序页面地址"),
      *                          @OA\Property(property="anchor_title", type="string", description="锚点标题"),
      *                          @OA\Property(property="task_icon", type="string", description="任务图标"),
@@ -150,7 +150,8 @@ class TaskController extends AbstractController
      *                          @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
      *                          @OA\Property(property="profit", type="integer", description="最大收益（分）"),
      *                          @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
-     *                          @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳")
+     *                          @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳"),
+     *                          @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -205,26 +206,26 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time'],  $page, $pageSize, $sort);
+        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
         // //var_dump($list);
-        // if(!empty($list['lists']) ) {
+        if(!empty($list['lists']) ) {
+            foreach ($list["lists"] as $key => &$vo) {
+                // if (empty($vo["id"])) {
+                //     unset($list["lists"][$key]);
 
-        //     foreach ($list["lists"] as $key => &$vo) {
-        //         if (empty($vo["id"])) {
-        //             unset($list["lists"][$key]);
+                //     continue;
+                // }
 
-        //             continue;
-        //         }
+                // $listVideo = $modelVideo->order('income desc')->paginate(['list_rows'=>1,'query' => ["task_id"=>$vo["id"]]])->toArray();
 
-        //         $listVideo = $modelVideo->order('income desc')->paginate(['list_rows'=>1,'query' => ["task_id"=>$vo["id"]]])->toArray();
+                // $vo["max_video_info"] = empty($listVideo["data"])?[]:$listVideo["data"];
 
-        //         $vo["max_video_info"] = empty($listVideo["data"])?[]:$listVideo["data"];
-        //     }
-        //     unset($vo);
-        // }
-
+                $vo['payment_allocate_ratio'] = $vo['payment_allocate_ratio'] > 0 ? $vo['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
+            }
+            unset($vo);
+        }
 
         return $this->response->success($list);
     }
