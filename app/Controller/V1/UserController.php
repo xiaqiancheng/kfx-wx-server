@@ -6,6 +6,7 @@ use App\Controller\AbstractController;
 use App\Exception\BusinessException;
 use App\Repositories\BloggerRepository;
 use App\Repositories\MessageNoticeRepository;
+use App\Repositories\TaskCollectionRepository;
 use App\Services\UserService;
 use OpenApi\Annotations as OA;
 use HyperfExt\Auth\AuthManager;
@@ -328,7 +329,7 @@ class UserController extends AbstractController
      *     @OA\Parameter(name="page_size", in="query", description="每页数量",
      *         @OA\Schema(type="interger")
      *     ),
-     *     @OA\Parameter(name="status", in="query", description="状态 1任务中 2待结算 3已结算",
+     *     @OA\Parameter(name="status", in="query", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成",
      *         @OA\Schema(type="interger")
      *     ),
      *     @OA\Response(response="200", description="视频列表返回",
@@ -349,7 +350,7 @@ class UserController extends AbstractController
      *                          @OA\Property(property="play_count", type="integer", description="播放数量"),
      *                          @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *                          @OA\Property(property="forward_count", type="integer", description="转发数"),
-     *                          @OA\Property(property="is_balance", type="integer", description="状态 0任务中 1待结算 2已结算")
+     *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -360,6 +361,13 @@ class UserController extends AbstractController
      */
     public function videoList()
     {
+        // 1.待审核：展示申领待审核的任务以及视频待审核的任务
+        // 2.待提交：展示待提交视频的任务以及待提交视频数据的任务
+        // 3.待结算：展示待结算的任务
+        // 4.已驳回：展示申领审核失败的任务以及视频审核失败的任务
+        // 5.已取消：展示用户取消的任务
+        // 6.已完成：展示已完成的任务
+
         $page = $this->request->input('page', 1);
         $pageSize = $this->request->input('page_size', 20);
         $status = $this->request->input('status', 0); // 是否结算 1任务中 2待结算 3已结算
@@ -367,32 +375,81 @@ class UserController extends AbstractController
         $user = $this->request->getAttribute('auth');
 
         $filter = [
-            'blogger_id' => $user->id,
-            'status' => ['in', [0, 1]]
+            'blogger_id' => $user->id
         ];
-
-        // 任务中
+        // 待审核
         if ($status == 1) {
+            $filter['status'] = ['in', [0, 1]];
+            $filter['video_status'] = 0;
+        }
+
+        // 待提交
+        if ($status == 2) {
+            $filter['video_status'] = 1;
             $filter['is_balance'] = 0;
         }
 
-        if (in_array($status, [2, 3])) {
-            $filter['is_balance'] = $status - 1;
+        // 待结算
+        if ($status == 3) {
+            $filter['is_balance'] = 1;
         }
 
-        $videoList = VideoRepository::instance()->getList($filter, ['id', 'task_id', 'cover', 'play_count', 'digg_count', 'forward_count', 'is_balance'], $page, $pageSize, ['id' => 'desc']);
+        // 已驳回
+        if ($status == 4) {
+            $filter['status'] = 2;
+            $filter['video_status'] = ['or', 2];
+        }
+
+        // 已取消
+        if ($status == 5) {
+            $filter['status'] = 3;
+        }
+
+        // 已完成
+        if ($status == 6) {
+            $filter['is_balance'] = 2;
+        }
         
-        $taskIds = array_unique(array_column($videoList['list'], 'item_id'));
+        $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance'], $page, $pageSize, ['id' => 'desc']);
+
+        $taskIds = array_unique(array_column($taskCollectionList['list'], 'task_id'));
 
         $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskIds]], ['id', 'task_name', 'task_icon'], 0, 0);
         $taskIDForKey = array_column($taskList['list'], null, 'id');
 
-        foreach ($videoList['list'] as &$value) {
+        foreach ($taskCollectionList['list'] as &$value) {
+            // 判断状态
+            if (in_array($value['status'], [0, 1]) && $value['video_status'] == 0) {
+                $value['task_status'] = 1;
+            }
+            if ($value['video_status'] == 1 && $value['is_balance'] == 0) {
+                $value['task_status'] = 2;
+            }
+            if ($value['is_balance'] == 1) {
+                $value['task_status'] = 3;
+            }
+            if ($value['status'] == 2 || $value['video_status'] == 2) {
+                $value['task_status'] = 4;
+            }
+            if ($value['status'] == 3) {
+                $value['task_status'] = 5;
+            }
+            if ($value['is_balance'] == 2) {
+                $value['task_status'] = 6;
+            }
+            
             $value['task_name'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_name'] : '';
             $value['task_icon'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_icon'] : '';
+
+            $result1 = VideoRepository::instance()->findOneBy(['task_collection_id' => $value['id'], 'blogger_id' => $value['blogger_id'], 'status' => $value['video_status'], 'is_balance' => $value['is_balance']], ['cover', 'play_count', 'comment_count', 'forward_count']);
+            $value['cover'] = $result1['cover'] ?? '';
+            $value['play_count'] = $result1['play_count'] ?? 0;
+            $value['comment_count'] = $result1['comment_count'] ?? 0;
+            $value['forward_count'] = $result1['forward_count'] ?? 0;
+            unset($value['status'], $value['video_status'], $value['is_balance']);
         }
 
-        return $this->response->success($videoList);
+        return $this->response->success($taskCollectionList);
     }
 
     /**
