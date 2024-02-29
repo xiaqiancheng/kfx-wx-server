@@ -246,9 +246,10 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "commission", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
+     *                 required={"id", "task_name", "task_type", "task_desc", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
+     *                 @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
      *                 @OA\Property(property="detail", type="string", description="详细描述"),
      *                 @OA\Property(property="audit_requirement", type="string", description="审核要求"),
@@ -260,7 +261,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="task_icon", type="string", description="任务图标"),
      *                 @OA\Property(property="task_tags", type="object", description="任务标签"),
      *                 @OA\Property(property="refer_ma_captures", type="object", description="小程序截图"),
-     *                 @OA\Property(property="commission", type="integer", description="额外奖励（分）"),
+     *                 @OA\Property(property="cost_template_id", type="integer", description="费用模板ID"),
      *                 @OA\Property(property="collection_status", type="integer", description="任务领取审核状态 -1未领取 0待审核，1已审核，2审核未通过"),
      *                 @OA\Property(property="reject_reason", type="string", description="任务审核拒绝原因"),
      *                 @OA\Property(property="reject_time", type="string", description="任务审核拒绝时间"),
@@ -289,7 +290,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'commission', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance']);
     
         $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 
