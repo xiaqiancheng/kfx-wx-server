@@ -21,6 +21,8 @@ class CreateTaskCollection extends Migration
             $table->integer('extra_cost')->default(0)->comment('额外费用（分）');
             $table->string('remark')->default('')->comment('备注');
             $table->tinyInteger('status')->default(0)->comment('审核状态 0待审核，1已审核，2审核未通过');
+            $table->tinyInteger('level')->default(0)->comment('博主等级');
+            $table->integer('fans_count')->default(0)->comment('粉丝数');
             $table->timestamps();
             $table->comment('任务领取表');
         });

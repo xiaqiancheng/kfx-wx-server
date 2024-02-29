@@ -622,7 +622,8 @@ class TaskController extends AbstractController
      *             @OA\Property(property="video_captures", type="string", description="视频截图"),
      *             @OA\Property(property="comment_count", type="integer", description="评论数量"),
      *             @OA\Property(property="forward_count", type="integer", description="转发数量"),
-     *             @OA\Property(property="play_count", type="integer", description="播放数量")
+     *             @OA\Property(property="play_count", type="integer", description="播放数量"),
+     *             @OA\Property(property="remark", type="string", description="备注")
      *         )
      *     ),
      *     @OA\Response(response="200", description="返回",
@@ -636,7 +637,7 @@ class TaskController extends AbstractController
      */
     public function addVideoData()
     {
-        $request = $this->request->inputs(['task_id', 'video_captures', 'comment_count', 'forward_count', 'play_count']);
+        $request = $this->request->inputs(['task_id', 'video_captures', 'comment_count', 'forward_count', 'play_count', 'remark']);
 
         $validator = $this->validationFactory->make(
             $request,
@@ -683,7 +684,8 @@ class TaskController extends AbstractController
             'comment_count' => intval($request['comment_count'] ?? 0),
             'forward_count' => intval($request['forward_count'] ?? 0),
             'play_count' => intval($request['play_count'] ?? 0),
-            'is_balance' => 1
+            'is_balance' => 1,
+            'remark' => $request['remark'] ?? ''
         ];
 
         try {
