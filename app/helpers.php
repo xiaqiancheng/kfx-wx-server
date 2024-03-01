@@ -1,5 +1,7 @@
 <?php
 
+use App\Constants\ErrorCode;
+use App\Exception\BusinessException;
 use Hyperf\Cache\Listener\DeleteListenerEvent;
 use Hyperf\ExceptionHandler\Formatter\FormatterInterface;
 use Hyperf\HttpServer\Contract\RequestInterface;
@@ -343,5 +345,31 @@ if (! function_exists('redis')) {
 if (! function_exists('create_uniqid')) {
     function create_uniqid() {
         return substr(md5(uniqid(mt_rand(100000, 999999) . microtime())), 8, 16);
+    }
+}
+
+if (!function_exists('create_zip_archive')) {
+    function create_zip_archive($files, $outputPath, $baseOutputDir) {
+        if (!is_dir($baseOutputDir)) {
+            mkdir($baseOutputDir, 0777, true);
+        }
+        
+        // 创建一个 ZipArchive 实例
+        $zip = new ZipArchive();
+
+        // 打开要输出的 ZIP 文件，如果文件不存在则创建它
+        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '无法创建ZIP文件');
+        }
+        
+        // 将文件和子目录添加到 ZIP 文件中
+        foreach ($files as $file) {
+            $filePath = BASE_PATH . '/public/' . $file['path'];
+            
+            // 将文件添加到 ZIP 文件中，并使用相对路径作为文件名
+            $zip->addFile($filePath, basename($filePath));
+        }
+        
+        return $outputPath;
     }
 }
