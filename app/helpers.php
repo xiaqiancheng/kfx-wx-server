@@ -339,3 +339,9 @@ if (! function_exists('redis')) {
         return di()->get(RedisFactory::class)->get($db);
     }
 }
+
+if (! function_exists('create_uniqid')) {
+    function create_uniqid() {
+        return substr(md5(uniqid(mt_rand(100000, 999999) . microtime())), 8, 16);
+    }
+}

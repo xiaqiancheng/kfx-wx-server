@@ -220,13 +220,13 @@ class IndexController extends AbstractController
     /**
      * @OA\Post(
      *     path="/wxapi/upload",
-     *     summary="文件上传",
-     *     description="文件上传",
+     *     summary="图片上传",
+     *     description="图片上传",
      *     operationId="IndexController_upload",
      *     @OA\RequestBody(description="请求body",
      *         @OA\JsonContent(type="object",
-     *             required={"file"},
-     *             @OA\Property(property="file", type="file", description="文件"),
+     *             required={"image"},
+     *             @OA\Property(property="image", type="file", description="图片文件"),
      *         )
      *     ),
      *     @OA\Response(response="200", description="信息返回",
@@ -234,18 +234,14 @@ class IndexController extends AbstractController
      *             required={"errcode", "errmsg", "data"},
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
-     *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"path", "fullurl"},
-     *                 @OA\Property(property="path", type="string", description="文件路径"),
-     *                 @OA\Property(property="fullurl", type="string", description="文件url")
-     *             )
+     *             @OA\Property(property="data", type="string", description="图片ID")
      *         )
      *     )
      * )
      */
     public function upload()
     {
-        $file = $this->request->file('file');
+        $file = $this->request->file('image');
         
         if (empty($file)) {
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, '请选择文件');
@@ -258,23 +254,20 @@ class IndexController extends AbstractController
     }
 
 
-public function webhooks()
+    public function webhooks()
     {
         $param = $this->request->input('content');
          
-return $this->response->success($param);
+        return $this->response->success($param);
         if (empty($file)) {
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, '请选择文件');
-       }
+        }
 
         $fileService = new FileService();
         $result = $fileService->upload($file);
 
         return $this->response->success($result);
     }
-
-
-
 
     /**
      * @OA\Get(

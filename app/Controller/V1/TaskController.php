@@ -10,6 +10,7 @@ use App\Repositories\VideoRepository;
 use App\Services\TaskService;
 use OpenApi\Annotations as OA;
 use App\Repositories\TaskCollectionRepository;
+use App\Services\FileService;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 
@@ -525,8 +526,8 @@ class TaskController extends AbstractController
      *             required={"task_id", "cover", "video_link"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
      *             @OA\Property(property="title", type="string", description="视频标题"),
-     *             @OA\Property(property="cover", type="string", description="视频封面链接"),
-     *             @OA\Property(property="video_link", type="string", description="视频链接"),
+     *             @OA\Property(property="cover", type="string", description="视频封面 上传图片返回的ID"),
+     *             @OA\Property(property="video_link", type="string", description="上传视频返回的ID"),
      *             @OA\Property(property="remark", type="string", description="备注")
      *         )
      *     ),
@@ -620,7 +621,7 @@ class TaskController extends AbstractController
      *         @OA\JsonContent(type="object",
      *             required={"task_id", "video_captures"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
-     *             @OA\Property(property="video_captures", type="string", description="视频截图"),
+     *             @OA\Property(property="video_captures", type="string", description="视频截图 上传图片返回的ID"),
      *             @OA\Property(property="comment_count", type="integer", description="评论数量"),
      *             @OA\Property(property="forward_count", type="integer", description="转发数量"),
      *             @OA\Property(property="play_count", type="integer", description="播放数量"),
@@ -856,5 +857,42 @@ class TaskController extends AbstractController
         }
 
         return $this->response->success([], '任务结算成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/video/upload-video",
+     *     tags={"任务"},
+     *     summary="任务视频上传",
+     *     description="任务视频上传",
+     *     operationId="TaskController_uploadVideo",
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"video"},
+     *             @OA\Property(property="video", type="file", description="视频文件"),
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="string", description="视频ID")
+     *         )
+     *     )
+     * )
+     */
+    public function uploadVideo()
+    {
+        $file = $this->request->file('video');
+        
+        if (empty($file)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '请选择文件');
+        }
+
+        $fileService = new FileService();
+        $result = $fileService->uploadVideo($file);
+
+        return $this->response->success($result);
     }
 }

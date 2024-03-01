@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Constants\ErrorCode;
+use App\Exception\BusinessException;
+use App\Repositories\MediumRepository;
 use Hyperf\Di\Annotation\Inject;
 use League\Flysystem\Filesystem;
 
@@ -30,14 +33,49 @@ class FileService
 
         $driver = config('file.default');
 
-        $result = [];
+        $mediaId = '';
         if ($driver == 'local') {
-            //获取域名
-            $result['path'] = '/upload/'.$name;
-            $result['fullurl'] = env('HOST') . $result['path'];
+            $mediaId = create_uniqid();
+            MediumRepository::instance()->saveData([
+                'media_id'=> $mediaId,
+                'path' => 'public/upload/'.$name,
+                'file_type' => $extension
+            ]);
         }
         
-        return $result;
+        return $mediaId;
+    }
+
+    public function uploadVideo($file)
+    {
+        //资源
+        $stream = fopen($file->getRealPath(), 'r+');
+        $extension = $file->getExtension();
+        
+        if (!in_array($extension, ['mp4', 'webm'])) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '文件必须是mp4、webm视频格式');
+        }
+
+        $fileName = $file->getClientFilename();
+        $name = sprintf('%s/%s', 'video', $this->getFileName($fileName, $extension));
+        
+        $this->filesystem->writeStream($name, $stream);
+
+        fclose($stream);
+
+        $driver = config('file.default');
+
+        $mediaId = '';
+        if ($driver == 'local') {
+            $mediaId = create_uniqid();
+            MediumRepository::instance()->saveData([
+                'media_id'=> $mediaId,
+                'path' => 'public/upload/'.$name,
+                'file_type' => $extension
+            ]);
+        }
+        
+        return $mediaId;
     }
 
     /**
