@@ -38,7 +38,7 @@ class FileService
             $mediaId = create_uniqid();
             MediumRepository::instance()->saveData([
                 'media_id'=> $mediaId,
-                'path' => 'public/upload/'.$name,
+                'path' => 'upload/'.$name,
                 'file_type' => $extension
             ]);
         }
@@ -70,7 +70,7 @@ class FileService
             $mediaId = create_uniqid();
             MediumRepository::instance()->saveData([
                 'media_id'=> $mediaId,
-                'path' => 'public/upload/'.$name,
+                'path' => 'upload/'.$name,
                 'file_type' => $extension
             ]);
         }
