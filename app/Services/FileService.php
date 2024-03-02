@@ -90,4 +90,11 @@ class FileService
     {
         return md5($fileName . time()). '.' .$extension;
     }
+
+    public function getFileByMediaId($mediaId)
+    {
+        $mediaList = MediumRepository::instance()->getList(['media_id' => ['in', $mediaId]], ['media_id', 'path'], 0, 0, [], [], false);
+
+        return array_column($mediaList['list'], 'path', 'media_id');
+    }
 }

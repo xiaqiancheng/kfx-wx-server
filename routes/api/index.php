@@ -18,6 +18,8 @@ Router::addGroup('/wxapi/', function () {
    Router::post('share', 'App\Controller\V1\ShareController@share');
    Router::post('share/verify', 'App\Controller\V1\ShareController@shareVerify');
 
+   Router::get('video/rank', 'App\Controller\V1\IndexController@videoRank');
+
    Router::get('download/{code}', 'App\Controller\V1\IndexController@download');
 });
 

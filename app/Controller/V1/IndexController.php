@@ -19,6 +19,7 @@ use App\Repositories\ArticleRepository;
 use App\Repositories\FileShareRepository;
 use App\Repositories\LevelCostTemplateRepository;
 use App\Repositories\ShopRepository;
+use App\Repositories\VideoRepository;
 use App\Services\FileService;
 use OpenApi\Annotations as OA;
 use Hyperf\HttpServer\Contract\ResponseInterface;
@@ -317,6 +318,50 @@ class IndexController extends AbstractController
 
         return $this->response->success($data);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/video/rank",
+     *     summary="首页视频榜单",
+     *     description="首页视频榜单",
+     *     operationId="IndexController_videoRank",
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"list"},
+     *                 @OA\Property(property="list", type="array", description="返回数据",
+     *                     @OA\Items(type="object",
+     *                         required={"id", "cover", "play_count", "forward_count"},
+     *                         @OA\Property(property="id", type="integer", description="视频榜单id"),
+     *                         @OA\Property(property="cover", type="string", description="封面图"),
+     *                         @OA\Property(property="play_count", type="integer", description="播放量"),
+     *                         @OA\Property(property="forward_count", type="integer", description="收藏转发量")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function videoRank()
+    {
+        $videoList = VideoRepository::instance()->getList(['status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 5, ['play_count' => 'desc']);
+
+        $mediaId = array_unique(array_column($videoList['list'], 'cover'));
+        $fileService = new FileService;
+        $fileData = $fileService->getFileByMediaId($mediaId);
+
+        foreach ($videoList['list'] as &$v) {
+            $v['cover'] = env('HOST') . '/' . $fileData[$v['cover']];
+        }
+
+        return $this->response->success($videoList);
+    }
+
+
 
     public function download($code)
     {
