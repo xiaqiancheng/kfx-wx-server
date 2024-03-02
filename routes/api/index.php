@@ -16,5 +16,16 @@ Router::addGroup('/wxapi/', function () {
    Router::get('cost-template/list', 'App\Controller\V1\IndexController@getCostTemplateList');
 
    Router::post('share', 'App\Controller\V1\ShareController@share');
+   Router::post('share/verify', 'App\Controller\V1\ShareController@shareVerify');
+
+   Router::get('download/{code}', 'App\Controller\V1\IndexController@download');
 });
 
+Router::addGroup('/wxapi/', function () {
+   Router::get('share/file/list/{token}', 'App\Controller\V1\ShareController@getFile');
+   Router::get('share/get-download-code', 'App\Controller\V1\ShareController@getdownloadCode');
+}, [
+   'middleware' => [
+      App\Middleware\Auth\ShareAuthMiddleware::class
+   ],
+]);

@@ -58,6 +58,12 @@ return [
             'provider' => 'account',
             'options' => [],
         ],
+
+        'shareapi' => [
+            'driver' => \HyperfExt\Auth\Guards\JwtGuard::class,
+            'provider' => 'share',
+            'options' => [],
+        ],
     ],
 
     /*
@@ -82,6 +88,10 @@ return [
 
         'account' => [
             'driver' => \AdminBundle\Auth\AdminProvider::class,
+        ],
+
+        'share' => [
+            'driver' => \App\Auth\ShareProvider::class,
         ],
         // 'users' => [
         //     'driver' => \Hyperf\Auth\UserProvider\DatabaseUserProvider::class,

@@ -11,17 +11,29 @@ declare(strict_types=1);
  */
 namespace App\Controller\V1;
 
+use Hyperf\Di\Annotation\Inject;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
 use App\Repositories\ArticleRepository;
+use App\Repositories\FileShareRepository;
 use App\Repositories\LevelCostTemplateRepository;
 use App\Repositories\ShopRepository;
 use App\Services\FileService;
 use OpenApi\Annotations as OA;
+use Hyperf\HttpServer\Contract\ResponseInterface;
+
+use function PHPUnit\Framework\throwException;
 
 class IndexController extends AbstractController
 {
+
+    /**
+     * @Inject
+     * @var ResponseInterface
+     */
+    protected $responseInterface;
+
     /**
      * @OA\Get(
      *     path="/wxapi/get-ads",
@@ -304,5 +316,25 @@ class IndexController extends AbstractController
         }
 
         return $this->response->success($data);
+    }
+
+    public function download($code)
+    {
+        $shareData = FileShareRepository::instance()->findOneBy(['download_code' => $code], ['id', 'files']);
+        if (empty($shareData)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '文件不存在');
+        }
+        $file = $shareData['files'];
+
+        FileShareRepository::instance()->saveData([
+            'id' => $shareData['id'],
+            'download_code' => ''
+        ]);
+
+        $fileType = mime_content_type($file);
+        $response = $this->responseInterface->withHeader('Content-Type', $fileType);
+        $response = $response->withHeader('Content-Disposition', 'attachment; filename="'. basename($file) .'"');
+
+        return $response->download($file);
     }
 }

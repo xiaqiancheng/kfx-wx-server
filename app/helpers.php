@@ -373,3 +373,15 @@ if (!function_exists('create_zip_archive')) {
         return $outputPath;
     }
 }
+
+if (!function_exists('generate_random_code')) {
+    function generate_random_code() {
+        // 生成随机字节序列
+        $randomBytes = random_bytes(3); // 3 bytes = 6 characters in hex
+        // 将字节序列转换为十六进制字符串
+        $hexString = bin2hex($randomBytes);
+        // 截取字符串为六位长度并返回
+        return substr($hexString, 0, 6);
+    }
+}
+
