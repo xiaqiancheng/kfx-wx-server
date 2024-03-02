@@ -869,7 +869,7 @@ class TaskController extends AbstractController
 
     /**
      * @OA\Post(
-     *     path="/wxapi/task/video/upload-video",
+     *     path="/wxapi/task/video/upload",
      *     tags={"任务"},
      *     summary="任务视频上传",
      *     description="任务视频上传",
