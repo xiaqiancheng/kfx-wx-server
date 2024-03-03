@@ -611,7 +611,7 @@ class TaskController extends AbstractController
 
         $saveData = [
             'task_id' => $request['task_id'],
-            'task_collection_id' => $request['id'],
+            'task_collection_id' => $result['id'],
             'blogger_id' => $user->id,
             'title' => $request['title'] ?? '',
             'cover' => $request['cover'],
