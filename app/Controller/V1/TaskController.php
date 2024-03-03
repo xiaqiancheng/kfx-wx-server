@@ -152,7 +152,7 @@ class TaskController extends AbstractController
      *                          @OA\Property(property="profit", type="integer", description="最大收益（分）"),
      *                          @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
      *                          @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳"),
-     *                          @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比")
+     *                          @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比"),
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -210,9 +210,10 @@ class TaskController extends AbstractController
         $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
+        $intTime = time();
         // //var_dump($list);
-        if(!empty($list['lists']) ) {
-            foreach ($list["lists"] as $key => &$vo) {
+        if(!empty($list['list']) ) {
+            foreach ($list["list"] as $key => &$vo) {
                 // if (empty($vo["id"])) {
                 //     unset($list["lists"][$key]);
 
@@ -222,10 +223,17 @@ class TaskController extends AbstractController
                 // $listVideo = $modelVideo->order('income desc')->paginate(['list_rows'=>1,'query' => ["task_id"=>$vo["id"]]])->toArray();
 
                 // $vo["max_video_info"] = empty($listVideo["data"])?[]:$listVideo["data"];
+                if($intTime<$vo['task_end_time']){
+                        $vo['task_time_over'] = false;
+                
+                }else{
+
+                        $vo['task_time_over'] = true;
+                }
 
                 $vo['payment_allocate_ratio'] = $vo['payment_allocate_ratio'] > 0 ? $vo['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
             }
-            unset($vo);
+//            unset($vo);
         }
 
         return $this->response->success($list);
