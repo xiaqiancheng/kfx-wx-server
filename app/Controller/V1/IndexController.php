@@ -334,11 +334,12 @@ class IndexController extends AbstractController
      *                 required={"list"},
      *                 @OA\Property(property="list", type="array", description="返回数据",
      *                     @OA\Items(type="object",
-     *                         required={"id", "cover", "play_count", "forward_count"},
+     *                         required={"id", "cover", "play_count", "forward_count", "digg_count "},
      *                         @OA\Property(property="id", type="integer", description="视频榜单id"),
      *                         @OA\Property(property="cover", type="string", description="封面图"),
      *                         @OA\Property(property="play_count", type="integer", description="播放量"),
-     *                         @OA\Property(property="forward_count", type="integer", description="收藏转发量")
+     *                         @OA\Property(property="forward_count", type="integer", description="收藏转发量"),
+     *                         @OA\Property(property="digg_count ", type="integer", description="点赞数")
      *                     )
      *                 )
      *             )
@@ -348,7 +349,7 @@ class IndexController extends AbstractController
      */
     public function videoRank()
     {
-        $videoList = VideoRepository::instance()->getList(['status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 5, ['play_count' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['status' => 1], ['id', 'cover', 'play_count', 'forward_count', 'digg_count'], 1, 5, ['play_count' => 'desc']);
 
         $mediaId = array_unique(array_column($videoList['list'], 'cover'));
         $fileService = new FileService;

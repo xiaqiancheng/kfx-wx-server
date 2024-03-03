@@ -271,11 +271,12 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="is_balance", type="integer", description="是否结算  0任务中 1待结算 2已结算"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "cover", "play_count", "forward_count"},
+     *                          required={"id", "cover", "play_count", "forward_count", "digg_count"},
      *                          @OA\Property(property="id", type="integer", description="视频榜单id"),
      *                          @OA\Property(property="cover", type="string", description="封面图"),
      *                          @OA\Property(property="play_count", type="integer", description="播放量"),
-     *                          @OA\Property(property="forward_count", type="integer", description="收藏转发量")
+     *                          @OA\Property(property="forward_count", type="integer", description="收藏转发量"),
+     *                          @OA\Property(property="digg_count", type="integer", description="点赞数")
      *                      )
      *                 )
      *             )
@@ -319,7 +320,7 @@ class TaskController extends AbstractController
         }
 
         // 视频榜单
-        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1], ['id', 'cover', 'play_count', 'forward_count'], 1, 100, ['play_count' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['task_id' => $taskId, 'status' => 1], ['id', 'cover', 'play_count', 'forward_count', 'digg_count'], 1, 100, ['play_count' => 'desc']);
         $mediaId = array_unique(array_column($videoList['list'], 'cover'));
         $fileService = new FileService;
         $fileData = $fileService->getFileByMediaId($mediaId);
