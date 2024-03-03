@@ -255,12 +255,13 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_type", "task_desc", "shop_id", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
+     *                 required={"id", "task_name", "task_type", "task_desc", "shop_id", "reserve_time", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
      *                 @OA\Property(property="shop_id", type="string", description="店铺ID 数组格式"),
+     *                 @OA\Property(property="reserve_time", type="string", description="预约时间 数组格式"),
      *                 @OA\Property(property="detail", type="string", description="详细描述"),
      *                 @OA\Property(property="audit_requirement", type="string", description="审核要求"),
      *                 @OA\Property(property="creative_guidance", type="string", description="创作指导"),
@@ -301,7 +302,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id', 'reserve_time']);
     
         $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 
