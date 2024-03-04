@@ -19,6 +19,7 @@ use App\Repositories\ArticleRepository;
 use App\Repositories\FileShareRepository;
 use App\Repositories\LevelCostTemplateRepository;
 use App\Repositories\ShopRepository;
+use App\Repositories\TaskRepository;
 use App\Repositories\VideoRepository;
 use App\Services\FileService;
 use OpenApi\Annotations as OA;
@@ -334,8 +335,10 @@ class IndexController extends AbstractController
      *                 required={"list"},
      *                 @OA\Property(property="list", type="array", description="返回数据",
      *                     @OA\Items(type="object",
-     *                         required={"id", "cover", "play_count", "forward_count", "digg_count "},
+     *                         required={"id", "task_name", "video_title", "cover", "play_count", "forward_count", "digg_count "},
      *                         @OA\Property(property="id", type="integer", description="视频榜单id"),
+     *                         @OA\Property(property="task_name", type="string", description="任务名称"),
+     *                         @OA\Property(property="video_title", type="string", description="视频标题"),
      *                         @OA\Property(property="cover", type="string", description="封面图"),
      *                         @OA\Property(property="play_count", type="integer", description="播放量"),
      *                         @OA\Property(property="forward_count", type="integer", description="收藏转发量"),
@@ -349,13 +352,18 @@ class IndexController extends AbstractController
      */
     public function videoRank()
     {
-        $videoList = VideoRepository::instance()->getList(['status' => 1], ['id', 'cover', 'play_count', 'forward_count', 'digg_count'], 1, 5, ['play_count' => 'desc']);
+        $videoList = VideoRepository::instance()->getList(['status' => 1], ['id', 'task_id', 'video_title', 'cover', 'play_count', 'forward_count', 'digg_count'], 1, 5, ['play_count' => 'desc']);
+
+        $taskId = array_unique(array_column($videoList['list'], 'task_id'));
+        $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskId]], ['id', 'task_name'], 0, 0, [], [], false);
+        $taskData = array_column($taskList['list'], 'task_name', 'id');
 
         $mediaId = array_unique(array_column($videoList['list'], 'cover'));
         $fileService = new FileService;
         $fileData = $fileService->getFileByMediaId($mediaId);
 
         foreach ($videoList['list'] as &$v) {
+            $v['task_name'] = $taskData[$v['task_id']] ?? '';
             $v['cover'] = env('HOST') . '/' . $fileData[$v['cover']];
         }
 
