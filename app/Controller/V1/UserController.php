@@ -341,7 +341,7 @@ class UserController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="通知数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_id", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "is_balance"},
+     *                          required={"id", "task_id", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "task_status", "release_start_time", "release_end_time"},
      *                          @OA\Property(property="id", type="integer", description="视频id"),
      *                          @OA\Property(property="task_id", type="integer", description="任务id"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
@@ -350,7 +350,9 @@ class UserController extends AbstractController
      *                          @OA\Property(property="play_count", type="integer", description="播放数量"),
      *                          @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *                          @OA\Property(property="forward_count", type="integer", description="转发数"),
-     *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成")
+     *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成"),
+     *                          @OA\Property(property="release_start_time", type="datetime", description="发布开始时间"),
+     *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -441,11 +443,13 @@ class UserController extends AbstractController
             $value['task_name'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_name'] : '';
             $value['task_icon'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_icon'] : '';
 
-            $result1 = VideoRepository::instance()->findOneBy(['task_collection_id' => $value['id'], 'blogger_id' => $value['blogger_id'], 'status' => $value['video_status'], 'is_balance' => $value['is_balance']], ['cover', 'play_count', 'comment_count', 'forward_count']);
+            $result1 = VideoRepository::instance()->findOneBy(['task_collection_id' => $value['id'], 'blogger_id' => $value['blogger_id'], 'status' => $value['video_status'], 'is_balance' => $value['is_balance']], ['cover', 'play_count', 'comment_count', 'forward_count', 'release_start_time', 'release_end_time']);
             $value['cover'] = $result1['cover'] ?? '';
             $value['play_count'] = $result1['play_count'] ?? 0;
             $value['comment_count'] = $result1['comment_count'] ?? 0;
             $value['forward_count'] = $result1['forward_count'] ?? 0;
+            $value['release_start_time'] = $result1['release_start_time'] ?? '';
+            $value['release_end_time'] = $result1['release_end_time'] ?? '';
             unset($value['status'], $value['video_status'], $value['is_balance']);
         }
 
