@@ -167,6 +167,11 @@ class TaskController extends AbstractController
         $pageSize = $this->request->input('page_size', 20);
         $params = $this->request->inputs(['start_month', 'end_month', 'task_name', 'task_settle_type', 'form', 'content', 'sort']);
 
+  $userInfo = null;
+        try {
+            auth('api')->checkOrFail();
+            $userInfo = auth('api')->user();
+        }catch (\Throwable $throwable) {}
         $filter = ['status' => 1];
         if ($params['start_month'] ?? '' && $params['start_month'] ?? '') {
             if ($params['start_month'] && $params['start_month']) {
@@ -207,7 +212,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio'],  $page, $pageSize, $sort);
+        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio','update_time'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
         $intTime = time();
@@ -230,7 +235,26 @@ class TaskController extends AbstractController
 
                         $vo['task_time_over'] = true;
                 }
+                
+       if ($userInfo) {
+               $vo['collection_status'] = -1;
+        $vo['reject_reason'] = '';
+        // 视频审核状态
+        $vo['video_check_status'] = -1;
+        $vo['is_balance'] = -1;
+            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $vo['id'], 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at'], ['id' => 'desc']);
+            if ($result) {
+                $vo['collection_status'] = $result['status'];
+                $vo['reject_reason'] = $result['reject_reason'];
+                $vo['reject_time'] = $result['updated_at'];
+            }
 
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $vo['id'], 'blogger_id' => $userInfo->id], ['status', 'is_balance'], ['id' => 'desc']);
+            if ($result1) {
+                $vo['video_check_status'] = $result1['status'];
+                $vo['is_balance'] = $result1['is_balance'];
+            }
+        }
                 $vo['payment_allocate_ratio'] = $vo['payment_allocate_ratio'] > 0 ? $vo['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
             }
 //            unset($vo);
@@ -303,7 +327,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id', 'reserve_time', 'remark']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id', 'reserve_time', 'remark','update_time']);
     
         $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 

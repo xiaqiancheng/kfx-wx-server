@@ -80,9 +80,9 @@ class IndexController extends AbstractController
         return $this->response->success([
             'top_banner' => [
                 [
-                    'image_url' => 'https://kfc.xiuyan.info/images/11.jpeg',
+                    'image_url' => 'https://kfc.xiuyan.info/images/top5.jpg',
                     'redirect_type' => 0,
-                    'redirect_url' => '',
+                    'redirect_url' => '/pages/top5/index',
                     'appid' => '',
                     'name' => '',
                     'desc' => ''
