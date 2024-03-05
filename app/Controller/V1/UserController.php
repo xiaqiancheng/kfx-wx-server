@@ -51,10 +51,17 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"token", "is_authorize_user", "is_authorize_phone"},
+     *                 required={"token", "openid", "unionid", "avatarUrl", "nickName", "level", "income", "is_authorize_user", "is_authorize_phone", "is_douyin_authorize"},
      *                 @OA\Property(property="token", type="string", description="登录凭证"),
+     *                 @OA\Property(property="openid", type="string", description="openid"),
+     *                 @OA\Property(property="unionid", type="string", description="unionid"),
+     *                 @OA\Property(property="avatarUrl", type="string", description="头像"),
+     *                 @OA\Property(property="nickName", type="string", description="昵称"),
+     *                 @OA\Property(property="level", type="integer", description="级别"),
+     *                 @OA\Property(property="income", type="integer", description="收入（分）"),
      *                 @OA\Property(property="is_authorize_user", type="integer", description="是否授权用户信息0未授权 1已授权"),
-     *                 @OA\Property(property="is_authorize_phone", type="integer", description="是否绑定手机 0未绑定 1已绑定")
+     *                 @OA\Property(property="is_authorize_phone", type="integer", description="是否绑定手机 0未绑定 1已绑定"),
+     *                 @OA\Property(property="is_douyin_authorize", type="integer", description="抖音授权 0否 1是")
      *             )
      *         )
      *     )
@@ -80,7 +87,20 @@ class UserController extends AbstractController
         $token = $this->auth->guard('api')->attempt($request);
 
         $user = auth('api')->user();
-        return $this->response->success(['token' => $token, 'is_authorize_user' => $user->is_authorize_user, 'is_authorize_phone' => $user->is_authorize_phone]);
+        $userInfo = BloggerRepository::instance()->find($user->id, ['id', 'openid', 'unionid', 'avatarUrl', 'name', 'nickName', 'level', 'income', 'is_authorize_user', 'is_authorize_phone', 'doyin_id']);
+        
+        return $this->response->success([
+            'token' => $token,
+            'openid' => $userInfo['openid'],
+            'unionid' => $userInfo['unionid'],
+            'avatarUrl' => $userInfo['avatarUrl'],
+            'nickName' => $userInfo['nickName'],
+            'level' => $userInfo['level'],
+            'income' => $userInfo['income'],
+            'is_authorize_user' => $userInfo['is_authorize_user'],
+            'is_authorize_phone' => $userInfo['is_authorize_phone'],
+            'is_douyin_authorize' => empty($userInfo['doyin_id']) ? 0 : 1
+        ]);
     }
 
     /**
