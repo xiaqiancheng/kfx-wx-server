@@ -551,10 +551,10 @@ class TaskController extends AbstractController
         try {
             TaskCollectionRepository::instance()->saveData($saveData);
         } catch (\Throwable $e) {
-            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务申领失败');
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务受领失败');
         }
 
-        return $this->response->success([], '任务申领成功');
+        return $this->response->success([], '任务受领成功');
     }
 
     /**
