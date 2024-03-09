@@ -531,7 +531,10 @@ class UserController extends AbstractController
      *             @OA\Property(property="nickName", type="string", description="昵称"),
      *             @OA\Property(property="avatarUrl", type="string", description="头像"),
      *             @OA\Property(property="name", type="string", description="姓名"),
-     *             @OA\Property(property="id_card", type="string", description="身份证")
+     *             @OA\Property(property="id_card", type="string", description="身份证"),
+     *             @OA\Property(property="alipay_account", type="string", description="支付宝号"),
+     *             @OA\Property(property="bank_card_number", type="string", description="银行卡号"),
+     *             @OA\Property(property="open_bank", type="string", description="开户行")
      *         )
      *     ),
      *     @OA\Response(response="200", description="返回",
@@ -545,7 +548,7 @@ class UserController extends AbstractController
      */
     public function profileUpdate()
     {
-        $request = $this->request->inputs(['nickName', 'avatarUrl', 'name', 'id_card']);
+        $request = $this->request->inputs(['nickName', 'avatarUrl', 'name', 'id_card', 'alipay_account', 'bank_card_number', 'open_bank']);
         $userId = $this->request->getAttribute('auth')->id;
 
         $data = [];
@@ -560,6 +563,15 @@ class UserController extends AbstractController
         }
         if (($request['id_card'] ?? '') && $request['id_card']) {
             $data['id_card'] = $request['id_card'];
+        }
+        if (($request['alipay_account'] ?? '') && $request['alipay_account']) {
+            $data['alipay_account'] = $request['alipay_account'];
+        }
+        if (($request['bank_card_number'] ?? '') && $request['bank_card_number']) {
+            $data['bank_card_number'] = $request['bank_card_number'];
+        }
+        if (($request['open_bank'] ?? '') && $request['open_bank']) {
+            $data['open_bank'] = $request['open_bank'];
         }
 
         if ($data) {
