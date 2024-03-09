@@ -44,5 +44,5 @@ class Task extends Entity
      *
      * @var array
      */
-    protected $casts = ['id' => 'integer', 'task_settle_type' => 'integer', 'task_start_time' => 'integer', 'task_end_time' => 'integer', 'task_refund_period' => 'integer', 'payment_allocate_ratio' => 'integer', 'stauts' => 'integer', 'task_tags' => 'array', 'commission' => 'integer', 'shop_id' => 'array', 'reserve_time' => 'array', 'create_time' => 'integer', 'update_time' => 'integer'];
+    protected $casts = ['id' => 'integer', 'task_settle_type' => 'integer', 'task_start_time' => 'integer', 'task_end_time' => 'integer', 'task_refund_period' => 'integer', 'payment_allocate_ratio' => 'integer', 'stauts' => 'integer', 'task_tags' => 'array', 'commission' => 'integer', 'shop_id' => 'array', 'restrict_level' => 'array', 'reserve_time' => 'array', 'create_time' => 'integer', 'update_time' => 'integer'];
 }

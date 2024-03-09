@@ -140,7 +140,7 @@ class TaskController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit", "task_start_time", "task_end_time", "payment_allocate_ratio"},
+     *                          required={"id", "task_name", "task_settle_type", "start_page", "anchor_title", "task_icon", "task_tags", "refer_ma_captures", "profit", "task_start_time", "task_end_time", "payment_allocate_ratio", "restrict_level"},
      *                          @OA\Property(property="id", type="integer", description="id"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
      *                          @OA\Property(property="task_settle_type", type="integer", description="结算方式，类型包含：1-广告分成、2-支付分成（基础）、3-支付分成（绑定）、7-广告分成+支付分成（基础）、8-广告分成+支付分成（绑定）"),
@@ -153,6 +153,7 @@ class TaskController extends AbstractController
      *                          @OA\Property(property="task_start_time", type="integer", description="任务开始时间，秒级时间戳"),
      *                          @OA\Property(property="task_end_time", type="integer", description="任务结束时间，秒级时间戳"),
      *                          @OA\Property(property="payment_allocate_ratio", type="float", description="达人分成比例，百分比"),
+     *                          @OA\Property(property="restrict_level", type="string", description="限制达人报名等级，数组格式"),
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -212,7 +213,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio','update_time'],  $page, $pageSize, $sort);
+        $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio', 'restrict_level', 'update_time'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
         $intTime = time();
@@ -279,7 +280,7 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_type", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info"},
+     *                 required={"id", "task_name", "task_type", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info", "restrict_level"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
@@ -303,6 +304,7 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="reject_time", type="string", description="任务审核拒绝时间"),
      *                 @OA\Property(property="video_check_status", type="integer", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
      *                 @OA\Property(property="is_balance", type="integer", description="是否结算  0任务中 1待结算 2已结算"),
+     *                 @OA\Property(property="restrict_level", type="string", description="限制达人报名等级，数组格式"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "cover", "play_count", "forward_count", "digg_count"},
@@ -327,7 +329,7 @@ class TaskController extends AbstractController
 
         $service = new TaskService();
 
-        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id', 'reserve_time', 'remark','update_time']);
+        $data = $service->find($taskId, ['id', 'task_name', 'task_type', 'task_desc', 'detail', 'task_settle_type', 'task_start_time', 'task_end_time', 'task_icon', 'task_tags', 'refer_ma_captures', 'cost_template_id', 'payment_allocate_ratio', 'audit_requirement', 'creative_guidance', 'shop_id', 'reserve_time', 'remark', 'restrict_level', 'update_time']);
     
         $data['payment_allocate_ratio'] = $data['payment_allocate_ratio'] > 0 ? $data['payment_allocate_ratio'] / 100 : 0; // 达人分成比例
 
