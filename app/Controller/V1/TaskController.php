@@ -541,6 +541,11 @@ class TaskController extends AbstractController
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已申领');
         }
 
+        $count = TaskCollectionRepository::instance()->getCount(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => 3]);
+        if ($count >= 3) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务达到最大申领次数');
+        }
+
         $saveData = [
             'task_id' => $request['task_id'],
             'business_card_id' => $request['business_card_id'],
