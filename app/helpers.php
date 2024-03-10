@@ -385,3 +385,56 @@ if (!function_exists('generate_random_code')) {
     }
 }
 
+if (!function_exists('getMilliseconds')) {
+    function getMilliseconds() {
+        $microseconds = microtime(true);
+        $milliseconds = round(($microseconds - floor($microseconds)) * 1000);
+        return (int)(microtime(true) * 1000);
+    }
+}
+
+if (!function_exists('get_redirect_url')) {
+    function get_redirect_url($url) {
+        $header = get_headers($url, 1);
+        if (strpos($header[0], '301') !== false || strpos($header[0], '302') !== false) {
+            if (is_array($header['Location'])) {
+                return $header['Location'][count($header['Location']) - 1];
+            } else {
+                return $header['Location'];
+            }
+        } else {
+            return $url;
+        }
+    }
+}
+
+if (!function_exists('feiguaUrl')) {
+    function feiguaUrl($url){
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json, text/plain, */*',
+            'Accept-Language: zh-CN,zh;q=0.9',
+            'Connection: keep-alive',
+            'Referer: https://dy.feigua.cn/app/',
+            'Sec-Fetch-Dest: empty',
+            'Sec-Fetch-Mode: cors',
+            'Sec-Fetch-Site: same-origin',
+            'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'sec-ch-ua: "Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+            'sec-ch-ua-mobile: ?0',
+            'sec-ch-ua-platform: "macOS"',
+        ]);
+        curl_setopt($ch, CURLOPT_COOKIE, 'Hm_lvt_b9de64757508c82eff06065c30f71250=1709714708; ASP.NET_SessionId=o3j2vgc1ijqpuvqzasgla3m2; chl=key=feigua1_baidu-pinzhuan; body_collapsed=0; Hm_lpvt_b9de64757508c82eff06065c30f71250=1709734784; Hm_lvt_66d640e56887bf1b336aec47361698ca=1709737944; SameSite=none; secure=; SaveUserName=; Hm_lpvt_66d640e56887bf1b336aec47361698ca=1709888910; FEIGUADY=24F5F6914C51DA2BD70C8CB5BB83A150291BECEC18E849B19BC0D2045612CC882C06FF06EEEE4544F7686C5224B3A7E29113F6078A98A9C98485C12EFD2EBB7B3EAD7ACA66F0189CCE99B2B0DD164E5C1DE433CD5727730126118F61E3E37EAF621689183B5967FBDCA559F069C6F72BE02D4A809CD2DC1D7628E8196ADCCD812BF8E50040D2F0EDD93F70F900352226D08DB138ABBEB37810A58D69E093FD2204C8CDAE987F56A4469CC05D838BC4E6164AFEDDBD671C71F03418696E8449CA396E969549D78065; a88cc38cefdb953eaf07f4aaf7faf6a5=11c014ebad67002f9ba5bc3a4abd90b69fedf8d3093b6882beb962e7e7e712df2e28737c7c57db3cfb51f922fce8e8f35c7229939276b1f84668b13fbc330fa5360a2d0146b027f07f003a03a63dfe3f81aafe6409c1c4da3c3c5edfdcef1b318711a85e1e8d9849dd3cd804941c22ff; tfstk=epyMqhjD12T5q1J7vPH1KXff7DfdfFMjRrpxkx3VT2uQHhEVcKX0zujsgNZY-xqb0VyZQss0ozz76mENlKm4kPDx75ExmKqsQjNtkV3mnoalvaBRelZshxQRyTh0HXDx3NjG3ir_fxtCcHPWml9DSCPFxeRHCAIYeGcjr3nV9ZANejgzb2rTXJoMy4rZ-KJqSccGXluH3Kyh4kReaISWhDSYLIOj_DinyTk3y7Z3gT0CxMAycfoIb4IhxItt_DinyMjHZvcZAcuR.');
+    
+        $response = curl_exec($ch);
+    
+        curl_close($ch);
+        return json_decode($response, true);
+    }
+}
+
+

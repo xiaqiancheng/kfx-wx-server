@@ -4,6 +4,7 @@ namespace App\Controller\V1;
 use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
+use App\Repositories\BloggerBusinessCardRepository;
 use App\Repositories\BloggerRepository;
 use App\Repositories\MessageNoticeRepository;
 use App\Repositories\TaskCollectionRepository;
@@ -581,5 +582,201 @@ class UserController extends AbstractController
         }
 
         return $this->response->success([], '用户信息更新成功');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="wxapi/dy/info",
+     *     tags={"用户"},
+     *     summary="获取抖音信息",
+     *     description="获取抖音信息",
+     *     operationId="UserController_info",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Parameter(name="url", in="query", description="链接", required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(response="200", description="信息返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"uid", "nickname", "fans_count", "level"},
+     *                 @OA\Property(property="uid", type="string", description="抖音ID"),
+     *                 @OA\Property(property="nickname", type="string", description="昵称"),
+     *                 @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *                 @OA\Property(property="level", type="integer", description="等级")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getDouYinInfo()
+    {
+        $url = $this->request->input('url', '');
+        if (empty($url)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, 'URL不能为空');
+        }
+
+        $time = time();
+        $secondstime = getMilliseconds();
+        $redirect_url = get_redirect_url($url);
+        $parts = parse_url($redirect_url);
+        $path = $parts['path'];
+        $userPos = strpos($path, 'user/');
+        $sec_user_id = substr($path, $userPos + 5); // 5是'user/'的长度
+        $info_url = 'https://m.douyin.com/web/api/v2/user/info/?reflow_source=reflow_page&sec_uid=' . $sec_user_id;
+        $output = file_get_contents($info_url);
+        $res = json_decode($output, true);
+        if (isset($res['user_info'])) {
+            $result = $res['user_info'];
+            $feiguasearch='https://dy.feigua.cn/api/v1/other/navSearch/blogger?keyWord='.$result['unique_id'].'&_='.$secondstime.'';
+
+            $resfg = feiguaUrl($feiguasearch);
+            $query_string = parse_url($resfg['Data']['BloggerResult']['List'][0]['DetailUrl'], PHP_URL_FRAGMENT); // 这将返回"#"后面的部分
+            $query_string = ltrim($query_string, '#'); // 移除开头的"#"// 现在我们将查询字符串解析为关联数组
+            parse_str($query_string, $query_params);// 提取bloggerId和sign的值
+            $bloggerId = isset($query_params['/blogger-detail/index?bloggerId']) ? $query_params['/blogger-detail/index?bloggerId'] : null;
+            $sign = isset($query_params['sign']) ? $query_params['sign'] : null;
+
+            $otherpart = 'https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/otherpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$time.'&_='.$secondstime.'';
+            $resOtherpart = feiguaUrl($otherpart);
+            return $this->response->success([
+                'uid'=>$res['user_info']['unique_id'],
+                'nickname'=>$res['user_info']['nickname'],
+                'fans_count'=>$res['user_info']['mplatform_followers_count'],
+                'level' => $resOtherpart['Data']['SellGoodsLevelInt'],
+            ], '获取信息成功');
+            return ;
+        } else {
+            return $this->response->success();
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/business-card/add",
+     *     tags={"用户"},
+     *     summary="添加抖音名片",
+     *     description="添加抖音名片",
+     *     operationId="UserController_businessCardAdd",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"url", "douyin_id"},
+     *             @OA\Property(property="url", type="string", description="主页链接"),
+     *             @OA\Property(property="douyin_id", type="string", description="抖音ID"),
+     *             @OA\Property(property="nickname", type="string", description="昵称"),
+     *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
+     *             @OA\Property(property="level_id", type="integer", description="等级ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function businessCardAdd()
+    {
+        $request = $this->request->inputs(['url', 'nickname', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+        $userId = $this->request->getAttribute('auth')->id;
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'url' => 'required',
+                'douyin_id' => 'required'
+            ],
+            [
+                'url.required' => '主页链接必须',
+                'douyin_id.required' => '抖音ID必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $data['blogger_id'] = $userId;
+        $data['douyin_id'] = $request['douyin_id'];
+        $data['url'] = $request['url'];
+
+        if (($request['nickname'] ?? '') && $request['nickname']) {
+            $data['nickname'] = $request['nickname'];
+        }
+        if (($request['fans_count'] ?? '') && $request['fans_count']) {
+            $data['fans_count'] = $request['fans_count'];
+        }
+        if (($request['digg_count'] ?? '') && $request['digg_count']) {
+            $data['digg_count'] = $request['digg_count'];
+        }
+        if (($request['level_id'] ?? '') && $request['level_id']) {
+            $data['level_id'] = $request['level_id'];
+        }
+        $res = BloggerBusinessCardRepository::instance()->findOneBy([
+            'blogger_id' => $userId,
+            'douyin_id' => $request['douyin_id']
+        ]);
+        if ($res) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '此账号已添加');
+        }
+
+        BloggerBusinessCardRepository::instance()->saveData($data);
+
+        return $this->response->success([], '添加名片成功');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/user/business-card/list",
+     *     tags={"用户"},
+     *     summary="获取名片列表",
+     *     description="获取名片列表",
+     *     operationId="UserController_getBusinessCardList",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Response(response="200", description="名片列表返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                 required={"list"},
+     *                 @OA\Property(property="list", type="array", description="任务数据",
+     *                     @OA\Items(type="object",
+     *                          required={"id", "url", "nickname", "fans_count", "digg_count", "level_id"},
+     *                          @OA\Property(property="id", type="integer", description="名片ID"),
+     *                          @OA\Property(property="url", type="string", description="主页链接"),
+     *                          @OA\Property(property="nickname", type="string", description="昵称"),
+     *                          @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *                          @OA\Property(property="digg_count", type="integer", description="点赞数"),
+     *                          @OA\Property(property="level_id", type="integer", description="等级")
+     *                      )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getBusinessCardList()
+    {
+        $userId = $this->request->getAttribute('auth')->id;
+
+        $filter['blogger_id'] = $userId;
+
+        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'nickname', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
+
+        return $this->response->success($list);
     }
 }

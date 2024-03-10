@@ -15,6 +15,9 @@ Router::addGroup('/wxapi/', function () {
    Router::get('user/video/list', 'App\Controller\V1\UserController@videoList');
    Router::post('user/notice/read', 'App\Controller\V1\UserController@noticeRead');
    Router::post('user/profile/update', 'App\Controller\V1\UserController@profileUpdate');
+   Router::get('dy/info', 'App\Controller\V1\UserController@getDouYinInfo');
+   Router::post('user/business-card/add', 'App\Controller\V1\UserController@businessCardAdd');
+   Router::get('user/business-card/list', 'App\Controller\V1\UserController@getBusinessCardList');
 }, [
    'middleware' => [
       App\Middleware\Auth\LoginAuthMiddleware::class

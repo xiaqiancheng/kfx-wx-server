@@ -5,6 +5,7 @@ use App\Constants\ErrorCode;
 use App\Controller\AbstractController;
 use App\Exception\BusinessException;
 use App\Repositories\BloggerRepository;
+use App\Repositories\ReservationRepository;
 use App\Repositories\TagRepository;
 use App\Repositories\VideoRepository;
 use App\Services\TaskService;
@@ -484,8 +485,9 @@ class TaskController extends AbstractController
      *     ),
      *     @OA\RequestBody(description="请求body",
      *         @OA\JsonContent(type="object",
-     *             required={"task_id", "level_id"},
+     *             required={"task_id", "business_card_id", "level_id"},
      *             @OA\Property(property="task_id", type="integer", description="任务ID"),
+     *             @OA\Property(property="business_card_id", type="integer", description="名片ID"),
      *             @OA\Property(property="level_id", type="integer", description="级别ID"),
      *             @OA\Property(property="shop_name", type="string", description="店铺名称"),
      *             @OA\Property(property="reserve_time", type="string", description="预约时间 如2023-04-02 23:12:32"),
@@ -504,15 +506,17 @@ class TaskController extends AbstractController
      */
     public function apply()
     {
-        $request = $this->request->inputs(['task_id', 'level_id', 'shop_id', 'shop_name', 'reserve_time', 'extra_cost', 'remark']);
+        $request = $this->request->inputs(['task_id', 'business_card_id', 'level_id', 'shop_id', 'shop_name', 'reserve_time', 'extra_cost', 'remark']);
 
         $validator = $this->validationFactory->make(
             $request,
             [
-                'task_id' => 'required'
+                'task_id' => 'required',
+                'business_card_id' => 'required'
             ],
             [
-                'task_id.required' => '任务id必须'
+                'task_id.required' => '任务id必须',
+                'business_card_id.required' => '请选择名片'
             ]
         );
 
@@ -539,6 +543,7 @@ class TaskController extends AbstractController
 
         $saveData = [
             'task_id' => $request['task_id'],
+            'business_card_id' => $request['business_card_id'],
             'level_id' => $request['level_id'],
             'blogger_id' => $user->id,
             'shop_id' => intval($request['shop_id'] ?? 0),
@@ -552,6 +557,16 @@ class TaskController extends AbstractController
 
         try {
             TaskCollectionRepository::instance()->saveData($saveData);
+
+            $reservationData = [
+                'shop_id' => $saveData['shop_id'],
+                'bloger_id' => $saveData['blogger_id'],
+                'shop_name' => $saveData['shop_name']
+            ];
+            if ($request['reserve_time']) {
+                $reservationData['reservation_time'] = $request['reserve_time'];
+            }
+            ReservationRepository::instance()->saveData($reservationData);
         } catch (\Throwable $e) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务受领失败');
         }
