@@ -791,4 +791,33 @@ class UserController extends AbstractController
 
         return $this->response->success($list);
     }
+
+    /**
+     * @OA\Post(
+     *     path="user/business-card/del/{cardId}",
+     *     tags={"用户"},
+     *     summary="删除名片",
+     *     description="删除名片",
+     *     operationId="UserController_businessCardDel",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Parameter(name="cardId", in="path", description="名片ID",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\Response(response="200", description="结果返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function businessCardDel($cardId)
+    {
+        BloggerBusinessCardRepository::instance()->deleteByIds($cardId);
+
+        return $this->response->success([], '删除名片成功');
+    }
 }
