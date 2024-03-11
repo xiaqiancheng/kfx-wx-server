@@ -89,17 +89,17 @@ class IndexController extends AbstractController
                     'desc' => ''
                 ],
                 [
-                    'image_url' => 'https://kfc.xiuyan.info/images/22.jpeg',
+                    'image_url' => 'https://kfccdn.xiuyan.info/uploads/file/2024-03-11/feb865c2fc92a153d955e2d7d7ee7aa3.jpg',
                     'redirect_type' => 0,
-                    'redirect_url' => '',
+                    'redirect_url' => '/pages/details/details?id=10',
                     'appid' => '',
                     'name' => '',
                     'desc' => ''
                 ],
                 [
-                    'image_url' => 'https://kfc.xiuyan.info/images/33.jpeg',
+                    'image_url' => 'https://kfccdn.xiuyan.info/uploads/file/2024-03-11/35b87113fdf6f0163088cc156dde5fb9.jpg',
                     'redirect_type' => 0,
-                    'redirect_url' => '',
+                    'redirect_url' => '/pages/details/details?id=11',
                     'appid' => '',
                     'name' => '',
                     'desc' => ''
@@ -115,20 +115,20 @@ class IndexController extends AbstractController
                 //     'desc' => ''
                 // ],
                 [
-                    'image_url' => 'http://kids.kfc.com.cn/images/qqly.png',
-                    'redirect_type' => 3,
-                    'redirect_url' => 'https://kfc.xiuyan.info/video/1.mp4',
+                    'image_url' => 'https://kfccdn.xiuyan.info/uploads/file/2024-03-11/38d03ea68db7b56c7b2bd428a2f96b33.jpg',
+                    'redirect_type' => 0,
+                    'redirect_url' => '/pages/details/details?id=4',
                     'appid' => '',
-                    'name' => '儿童乐园',
-                    'desc' => '快乐肯德基欢乐庆生！'
+                    'name' => '「神搓搓火锅酒馆」推广',
+                    'desc' => '【拍摄产品】：神搓搓招牌4件套（主推）'
                 ],
                 [
-                    'image_url' => 'http://www.kfc.com.cn/kfccda/ImgFile/201202/121727_919079.jpg',
-                    'redirect_type' => 3,
-                    'redirect_url' => 'https://kfc.xiuyan.info/video/2.mp4',
+                    'image_url' => 'https://kfccdn.xiuyan.info/uploads/file/2024-03-11/73991cb11420961b55971a297dc7c219.jpg',
+                    'redirect_type' => 0,
+                    'redirect_url' => '/pages/details/details?id=9',
                     'appid' => '',
-                    'name' => '天天运动',
-                    'desc' => '快来肯德基欢乐庆生！'
+                    'name' => '「和满堂川沙旗舰店-262四人餐」',
+                    'desc' => '#年味上海  #上海本帮菜单已就位  #哭着都要吃完的排骨年糕！'
                 ]
             ]
         ]);

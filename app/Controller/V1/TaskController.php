@@ -217,7 +217,7 @@ class TaskController extends AbstractController
         $list = $service->getList($filter, ['id', 'task_name', 'task_settle_type', 'start_page', 'anchor_title', 'task_icon', 'task_tags', 'refer_ma_captures', 'profit', 'task_start_time', 'task_end_time', 'payment_allocate_ratio', 'restrict_level', 'update_time'],  $page, $pageSize, $sort);
 
         // $modelVideo=new \app\common\model\Video();
-        $intTime = time();
+        $intTime = time()-86400*5;
         // //var_dump($list);
         if(!empty($list['list']) ) {
             foreach ($list["list"] as $key => &$vo) {
