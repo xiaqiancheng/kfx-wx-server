@@ -17,6 +17,7 @@ class CreateBloggerBusinessCardTable extends Migration
             $table->string('url')->default('')->comment('主页链接');
             $table->string('douyin_id')->default('')->comment('抖音ID');
             $table->string('nickname')->default('')->comment('昵称');
+            $table->string('avatar')->default('')->comment('头像');
             $table->integer('fans_count')->default(0)->comment('粉丝数');
             $table->integer('digg_count')->default(0)->comment('点赞数');
             $table->integer('level_id')->default(0)->comment('等级');

@@ -603,9 +603,10 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"uid", "nickname", "fans_count", "level"},
+     *                 required={"uid", "nickname", "avatar", "fans_count", "level"},
      *                 @OA\Property(property="uid", type="string", description="抖音ID"),
      *                 @OA\Property(property="nickname", type="string", description="昵称"),
+     *                 @OA\Property(property="avatar", type="string", description="头像"),
      *                 @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *                 @OA\Property(property="level", type="integer", description="等级")
      *             )
@@ -640,13 +641,22 @@ class UserController extends AbstractController
             parse_str($query_string, $query_params);// 提取bloggerId和sign的值
             $bloggerId = isset($query_params['/blogger-detail/index?bloggerId']) ? $query_params['/blogger-detail/index?bloggerId'] : null;
             $sign = isset($query_params['sign']) ? $query_params['sign'] : null;
-
+            $ts = isset($query_params['ts']) ? $query_params['ts'] : null;
+            $mainpart='https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/mainpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$ts.'&_='.$secondstime.'';
             $otherpart = 'https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/otherpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$time.'&_='.$secondstime.'';
+            $resMainpart = feiguaUrl($mainpart);
+            $avatarDomain = '';
+            $avatar = isset($resMainpart['Data']) ? $resMainpart['Data']['Avatar'] : '';
+            if ($avatar) {
+                $parsed_url = parse_url($avatar);
+                $avatarDomain = $parsed_url['scheme'] . '://' . $parsed_url['host'] . $parsed_url['path'];
+            }
             $resOtherpart = feiguaUrl($otherpart);
             return $this->response->success([
-                'uid'=>$res['user_info']['unique_id'],
-                'nickname'=>$res['user_info']['nickname'],
-                'fans_count'=>$res['user_info']['mplatform_followers_count'],
+                'uid' => $res['user_info']['unique_id'],
+                'nickname' => $res['user_info']['nickname'],
+                'avatar' => $avatarDomain,
+                'fans_count' => $res['user_info']['mplatform_followers_count'],
                 'level' => $resOtherpart['Data']['SellGoodsLevelInt'],
             ], '获取信息成功');
             return ;
@@ -671,6 +681,7 @@ class UserController extends AbstractController
      *             @OA\Property(property="url", type="string", description="主页链接"),
      *             @OA\Property(property="douyin_id", type="string", description="抖音ID"),
      *             @OA\Property(property="nickname", type="string", description="昵称"),
+     *             @OA\Property(property="avatar", type="string", description="头像"),
      *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *             @OA\Property(property="level_id", type="integer", description="等级ID")
@@ -687,7 +698,7 @@ class UserController extends AbstractController
      */
     public function businessCardAdd()
     {
-        $request = $this->request->inputs(['url', 'nickname', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+        $request = $this->request->inputs(['url', 'nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
         $userId = $this->request->getAttribute('auth')->id;
 
         $validator = $this->validationFactory->make(
@@ -755,10 +766,11 @@ class UserController extends AbstractController
      *                 required={"list"},
      *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object",
-     *                          required={"id", "url", "nickname", "fans_count", "digg_count", "level_id"},
+     *                          required={"id", "url", "nickname", "avatar", "fans_count", "digg_count", "level_id"},
      *                          @OA\Property(property="id", type="integer", description="名片ID"),
      *                          @OA\Property(property="url", type="string", description="主页链接"),
      *                          @OA\Property(property="nickname", type="string", description="昵称"),
+     *                          @OA\Property(property="avatar", type="string", description="头像"),
      *                          @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *                          @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *                          @OA\Property(property="level_id", type="integer", description="等级")
@@ -775,7 +787,7 @@ class UserController extends AbstractController
 
         $filter['blogger_id'] = $userId;
 
-        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'nickname', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
+        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
 
         return $this->response->success($list);
     }
