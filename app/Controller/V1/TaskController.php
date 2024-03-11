@@ -642,7 +642,7 @@ class TaskController extends AbstractController
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务无效');
         }
 
-        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'status', 'reject_reason']);
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1]]], ['id', 'business_card_id', 'status', 'reject_reason']);
         if (empty($result)) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
         }
@@ -657,6 +657,7 @@ class TaskController extends AbstractController
 
         $saveData = [
             'task_id' => $request['task_id'],
+            'business_card_id' => $result['business_card_id'],
             'task_collection_id' => $result['id'],
             'blogger_id' => $user->id,
             'title' => $request['title'] ?? '',
