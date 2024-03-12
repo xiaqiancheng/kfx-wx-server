@@ -281,10 +281,11 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_type", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info", "restrict_level"},
+     *                 required={"id", "task_name", "task_type", "sign_status", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info", "restrict_level"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
+     *                 @OA\Property(property="sign_status", type="integer", description="探店签到状态 0未签到 1已签到"),
      *                 @OA\Property(property="task_desc", type="string", description="任务介绍"),
      *                 @OA\Property(property="shop_id", type="string", description="店铺ID 数组格式"),
      *                 @OA\Property(property="reserve_time", type="string", description="预约时间 数组格式"),
@@ -337,16 +338,18 @@ class TaskController extends AbstractController
         // 任务领取状态
         $data['collection_status'] = -1;
         $data['reject_reason'] = '';
+        $data['sign_status'] = 0;
         // 视频审核状态
         $data['video_check_status'] = -1;
         $data['is_balance'] = -1;
 
         if ($userInfo) {
-            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'updated_at'], ['id' => 'desc']);
+            $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'sign_status', 'updated_at'], ['id' => 'desc']);
             if ($result) {
                 $data['collection_status'] = $result['status'];
                 $data['reject_reason'] = $result['reject_reason'];
                 $data['reject_time'] = $result['updated_at'];
+                $data['sign_status'] = $result['sign_status'];
             }
 
             $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'is_balance'], ['id' => 'desc']);

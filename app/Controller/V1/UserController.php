@@ -362,9 +362,10 @@ class UserController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="通知数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_id", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "task_status", "release_start_time", "release_end_time"},
+     *                          required={"id", "task_id", "task_type", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "task_status", "release_start_time", "release_end_time", "sign_status"},
      *                          @OA\Property(property="id", type="integer", description="视频id"),
      *                          @OA\Property(property="task_id", type="integer", description="任务id"),
+     *                          @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
      *                          @OA\Property(property="task_icon", type="string", description="任务图标"),
      *                          @OA\Property(property="cover", type="string", description="封面图"),
@@ -373,7 +374,8 @@ class UserController extends AbstractController
      *                          @OA\Property(property="forward_count", type="integer", description="转发数"),
      *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成"),
      *                          @OA\Property(property="release_start_time", type="datetime", description="发布开始时间"),
-     *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间")
+     *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间"),
+     *                          @OA\Property(property="sign_status", type="integer", description="探店签到状态 0未签到 1已签到")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -433,11 +435,11 @@ class UserController extends AbstractController
             $filter['is_balance'] = 2;
         }
         
-        $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance'], $page, $pageSize, ['id' => 'desc']);
+        $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance' ,'sign_status'], $page, $pageSize, ['id' => 'desc']);
 
         $taskIds = array_unique(array_column($taskCollectionList['list'], 'task_id'));
 
-        $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskIds]], ['id', 'task_name', 'task_icon'], 0, 0);
+        $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskIds]], ['id', 'task_name', 'task_type', 'task_icon'], 0, 0);
         $taskIDForKey = array_column($taskList['list'], null, 'id');
 
         foreach ($taskCollectionList['list'] as &$value) {
@@ -461,6 +463,7 @@ class UserController extends AbstractController
                 $value['task_status'] = 6;
             }
             
+            $value['task_type'] = $taskIDForKey[$value['task_id']]['task_type'];
             $value['task_name'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_name'] : '';
             $value['task_icon'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_icon'] : '';
 
