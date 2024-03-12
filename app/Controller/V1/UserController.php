@@ -725,6 +725,9 @@ class UserController extends AbstractController
         if (($request['nickname'] ?? '') && $request['nickname']) {
             $data['nickname'] = $request['nickname'];
         }
+        if (($request['avatar'] ?? '') && $request['avatar']) {
+            $data['avatar'] = $request['avatar'];
+        }
         if (($request['fans_count'] ?? '') && $request['fans_count']) {
             $data['fans_count'] = $request['fans_count'];
         }
@@ -819,5 +822,91 @@ class UserController extends AbstractController
         BloggerBusinessCardRepository::instance()->deleteByIds($cardId);
 
         return $this->response->success([], '删除名片成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/business-card/edit/{cardId}",
+     *     tags={"用户"},
+     *     summary="更新抖音名片",
+     *     description="更新抖音名片",
+     *     operationId="UserController_businessCardEdit",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Parameter(name="cardId", in="path", description="名片ID",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"url", "douyin_id"},
+     *             @OA\Property(property="douyin_id", type="string", description="抖音ID"),
+     *             @OA\Property(property="nickname", type="string", description="昵称"),
+     *             @OA\Property(property="avatar", type="string", description="头像"),
+     *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
+     *             @OA\Property(property="level_id", type="integer", description="等级ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function businessCardEdit($cardId)
+    {
+        $request = $this->request->inputs(['nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'douyin_id' => 'required'
+            ],
+            [
+                'douyin_id.required' => '抖音ID必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $cardData = BloggerBusinessCardRepository::instance()->find($cardId, ['blogger_id', 'douyin_id']);
+        if (empty($cardData)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '名片不存在');
+        }
+
+        $userId = $this->request->getAttribute('auth')->id;
+        if ($request['douyin_id'] !== $cardData['douyin_id'] || $cardData['blogger_id'] !== $userId) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '名片不允许更新');
+        }
+
+        $data = [
+            'id' => $cardId
+        ];
+        if (($request['nickname'] ?? '') && $request['nickname']) {
+            $data['nickname'] = $request['nickname'];
+        }
+        if (($request['avatar'] ?? '') && $request['avatar']) {
+            $data['avatar'] = $request['avatar'];
+        }
+        if (($request['fans_count'] ?? '') && $request['fans_count']) {
+            $data['fans_count'] = $request['fans_count'];
+        }
+        if (($request['digg_count'] ?? '') && $request['digg_count']) {
+            $data['digg_count'] = $request['digg_count'];
+        }
+        if (($request['level_id'] ?? '') && $request['level_id']) {
+            $data['level_id'] = $request['level_id'];
+        }
+
+        BloggerBusinessCardRepository::instance()->saveData($data);
+
+        return $this->response->success([], '名片更新成功');
     }
 }
