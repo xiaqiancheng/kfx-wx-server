@@ -658,7 +658,12 @@ class UserController extends AbstractController
             $resOtherpart = feiguaUrl($otherpart);
             if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
                 logger('获取抖音信息1')->error(json_encode($resOtherpart).json_encode($resMainpart));
-                throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
+                return $this->response->json([
+                    'code' => 50000,
+                    'msg' => '获取失败，请稍后再试',
+                    'log' => $resOtherpart,
+                    'log1' => $resMainpart
+                ]);
             }
             return $this->response->success([
                 'uid' => $res['user_info']['unique_id'],
@@ -670,7 +675,11 @@ class UserController extends AbstractController
             ], '获取信息成功');
         } else {
             logger('获取抖音信息2')->error($output);
-            throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
+            return $this->response->json([
+                'code' => 50000,
+                'msg' => '获取失败，请稍后再试',
+                'log' => $res
+            ]);
         }
     }
 
