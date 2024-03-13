@@ -362,9 +362,10 @@ class UserController extends AbstractController
      *                 required={"total_count", "list"},
      *                 @OA\Property(property="list", type="array", description="通知数据",
      *                     @OA\Items(type="object", 
-     *                          required={"id", "task_id", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "task_status", "release_start_time", "release_end_time"},
+     *                          required={"id", "task_id", "task_type", "task_name", "task_icon", "cover", "play_count", "digg_count", "forward_count", "task_status", "release_start_time", "release_end_time", "sign_status"},
      *                          @OA\Property(property="id", type="integer", description="视频id"),
      *                          @OA\Property(property="task_id", type="integer", description="任务id"),
+     *                          @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
      *                          @OA\Property(property="task_name", type="string", description="任务名称"),
      *                          @OA\Property(property="task_icon", type="string", description="任务图标"),
      *                          @OA\Property(property="cover", type="string", description="封面图"),
@@ -373,7 +374,8 @@ class UserController extends AbstractController
      *                          @OA\Property(property="forward_count", type="integer", description="转发数"),
      *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 4.已驳回 5.已取消 6.已完成"),
      *                          @OA\Property(property="release_start_time", type="datetime", description="发布开始时间"),
-     *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间")
+     *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间"),
+     *                          @OA\Property(property="sign_status", type="integer", description="探店签到状态 0未签到 1已签到")
      *                      )
      *                 ),
      *                 @OA\Property(property="total_count", type="integer", description="总数量")
@@ -433,11 +435,11 @@ class UserController extends AbstractController
             $filter['is_balance'] = 1;
         }
         
-        $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance'], $page, $pageSize, ['id' => 'desc']);
+        $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance' ,'sign_status'], $page, $pageSize, ['id' => 'desc']);
 
         $taskIds = array_unique(array_column($taskCollectionList['list'], 'task_id'));
 
-        $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskIds]], ['id', 'task_name', 'task_icon'], 0, 0);
+        $taskList = TaskRepository::instance()->getList(['id' => ['in', $taskIds]], ['id', 'task_name', 'task_type', 'task_icon'], 0, 0);
         $taskIDForKey = array_column($taskList['list'], null, 'id');
 
         foreach ($taskCollectionList['list'] as &$value) {
@@ -461,6 +463,7 @@ class UserController extends AbstractController
             //     $value['task_status'] = 6;
             // }
             
+            $value['task_type'] = $taskIDForKey[$value['task_id']]['task_type'];
             $value['task_name'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_name'] : '';
             $value['task_icon'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_icon'] : '';
 
@@ -725,6 +728,9 @@ class UserController extends AbstractController
         if (($request['nickname'] ?? '') && $request['nickname']) {
             $data['nickname'] = $request['nickname'];
         }
+        if (($request['avatar'] ?? '') && $request['avatar']) {
+            $data['avatar'] = $request['avatar'];
+        }
         if (($request['fans_count'] ?? '') && $request['fans_count']) {
             $data['fans_count'] = $request['fans_count'];
         }
@@ -819,5 +825,91 @@ class UserController extends AbstractController
         BloggerBusinessCardRepository::instance()->deleteByIds($cardId);
 
         return $this->response->success([], '删除名片成功');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/user/business-card/edit/{cardId}",
+     *     tags={"用户"},
+     *     summary="更新抖音名片",
+     *     description="更新抖音名片",
+     *     operationId="UserController_businessCardEdit",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Parameter(name="cardId", in="path", description="名片ID",
+     *         @OA\Schema(type="interger")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"url", "douyin_id"},
+     *             @OA\Property(property="douyin_id", type="string", description="抖音ID"),
+     *             @OA\Property(property="nickname", type="string", description="昵称"),
+     *             @OA\Property(property="avatar", type="string", description="头像"),
+     *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
+     *             @OA\Property(property="level_id", type="integer", description="等级ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function businessCardEdit($cardId)
+    {
+        $request = $this->request->inputs(['nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'douyin_id' => 'required'
+            ],
+            [
+                'douyin_id.required' => '抖音ID必须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $cardData = BloggerBusinessCardRepository::instance()->find($cardId, ['blogger_id', 'douyin_id']);
+        if (empty($cardData)) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '名片不存在');
+        }
+
+        $userId = $this->request->getAttribute('auth')->id;
+        if ($request['douyin_id'] !== $cardData['douyin_id'] || $cardData['blogger_id'] !== $userId) {
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, '名片不允许更新');
+        }
+
+        $data = [
+            'id' => $cardId
+        ];
+        if (($request['nickname'] ?? '') && $request['nickname']) {
+            $data['nickname'] = $request['nickname'];
+        }
+        if (($request['avatar'] ?? '') && $request['avatar']) {
+            $data['avatar'] = $request['avatar'];
+        }
+        if (($request['fans_count'] ?? '') && $request['fans_count']) {
+            $data['fans_count'] = $request['fans_count'];
+        }
+        if (($request['digg_count'] ?? '') && $request['digg_count']) {
+            $data['digg_count'] = $request['digg_count'];
+        }
+        if (($request['level_id'] ?? '') && $request['level_id']) {
+            $data['level_id'] = $request['level_id'];
+        }
+
+        BloggerBusinessCardRepository::instance()->saveData($data);
+
+        return $this->response->success([], '名片更新成功');
     }
 }

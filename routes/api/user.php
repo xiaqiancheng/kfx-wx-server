@@ -19,6 +19,7 @@ Router::addGroup('/wxapi/', function () {
    Router::post('user/business-card/add', 'App\Controller\V1\UserController@businessCardAdd');
    Router::get('user/business-card/list', 'App\Controller\V1\UserController@getBusinessCardList');
    Router::post('user/business-card/del/{cardId:\d+}', 'App\Controller\V1\UserController@businessCardDel');
+   Router::post('user/business-card/edit/{cardId:\d+}', 'App\Controller\V1\UserController@businessCardEdit');
 }, [
    'middleware' => [
       App\Middleware\Auth\LoginAuthMiddleware::class
