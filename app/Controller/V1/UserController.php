@@ -659,8 +659,8 @@ class UserController extends AbstractController
             if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
                 logger('获取抖音信息1')->error(json_encode($resOtherpart).json_encode($resMainpart));
                 return $this->response->json([
-                    'code' => 50000,
-                    'msg' => '获取失败，请稍后再试',
+                    'errcode' => 50000,
+                    'errmsg' => '获取失败，请稍后再试',
                     'log' => $resOtherpart,
                     'log1' => $resMainpart
                 ]);
@@ -676,8 +676,8 @@ class UserController extends AbstractController
         } else {
             logger('获取抖音信息2')->error($output);
             return $this->response->json([
-                'code' => 50000,
-                'msg' => '获取失败，请稍后再试',
+                'errcode' => 50000,
+                'errmsg' => '获取失败，请稍后再试',
                 'log' => $res
             ]);
         }
