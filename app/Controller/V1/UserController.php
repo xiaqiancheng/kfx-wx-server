@@ -350,7 +350,7 @@ class UserController extends AbstractController
      *     @OA\Parameter(name="page_size", in="query", description="每页数量",
      *         @OA\Schema(type="interger")
      *     ),
-     *     @OA\Parameter(name="status", in="query", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成",
+     *     @OA\Parameter(name="status", in="query", description="状态 1.待审核 2.待提交 4.已驳回 5.已取消 6.已完成",
      *         @OA\Schema(type="interger")
      *     ),
      *     @OA\Response(response="200", description="视频列表返回",
@@ -371,7 +371,7 @@ class UserController extends AbstractController
      *                          @OA\Property(property="play_count", type="integer", description="播放数量"),
      *                          @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *                          @OA\Property(property="forward_count", type="integer", description="转发数"),
-     *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 3.待结算 4.已驳回 5.已取消 6.已完成"),
+     *                          @OA\Property(property="task_status", type="integer", description="状态 1.待审核 2.待提交 4.已驳回 5.已取消 6.已完成"),
      *                          @OA\Property(property="release_start_time", type="datetime", description="发布开始时间"),
      *                          @OA\Property(property="release_end_time", type="datetime", description="发布结束时间")
      *                      )
@@ -413,9 +413,9 @@ class UserController extends AbstractController
         }
 
         // 待结算
-        if ($status == 3) {
-            $filter['is_balance'] = 1;
-        }
+        // if ($status == 3) {
+        //     $filter['is_balance'] = 1;
+        // }
 
         // 已驳回
         if ($status == 4) {
@@ -430,7 +430,7 @@ class UserController extends AbstractController
 
         // 已完成
         if ($status == 6) {
-            $filter['is_balance'] = 2;
+            $filter['is_balance'] = 1;
         }
         
         $taskCollectionList = TaskCollectionRepository::instance()->getList($filter, ['id', 'task_id', 'blogger_id', 'status', 'video_status', 'is_balance'], $page, $pageSize, ['id' => 'desc']);
@@ -449,7 +449,7 @@ class UserController extends AbstractController
                 $value['task_status'] = 2;
             }
             if ($value['is_balance'] == 1) {
-                $value['task_status'] = 3;
+                $value['task_status'] = 6;
             }
             if ($value['status'] == 2 || $value['video_status'] == 2) {
                 $value['task_status'] = 4;
@@ -457,9 +457,9 @@ class UserController extends AbstractController
             if ($value['status'] == 3) {
                 $value['task_status'] = 5;
             }
-            if ($value['is_balance'] == 2) {
-                $value['task_status'] = 6;
-            }
+            // if ($value['is_balance'] == 2) {
+            //     $value['task_status'] = 6;
+            // }
             
             $value['task_name'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_name'] : '';
             $value['task_icon'] = $taskIDForKey[$value['task_id']] ? $taskIDForKey[$value['task_id']]['task_icon'] : '';
