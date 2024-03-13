@@ -928,4 +928,44 @@ class UserController extends AbstractController
 
         return $this->response->success([], '名片更新成功');
     }
+
+    /**
+     * @OA\Get(
+     *     path="/wxapi/user/business-card/info/{cardId}",
+     *     tags={"用户"},
+     *     summary="名片详情",
+     *     description="名片详情",
+     *     operationId="UserController_businessCardInfo",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\Parameter(name="cardId", in="path", description="名片ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response="200", description="名片详情返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息"),
+     *             @OA\Property(property="data", type="object", description="信息返回",
+     *                  required={"id", "url", "douyin_id", "nickname", "avatar", "fans_count", "digg_count", "level_id"},
+     *                  @OA\Property(property="id", type="integer", description="名片ID"),
+     *                  @OA\Property(property="url", type="string", description="主页链接"),
+     *                  @OA\Property(property="douyin_id", type="string", description="抖音ID"),
+     *                  @OA\Property(property="nickname", type="string", description="昵称"),
+     *                  @OA\Property(property="avatar", type="string", description="头像"),
+     *                  @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *                  @OA\Property(property="digg_count", type="integer", description="点赞数"),
+     *                  @OA\Property(property="level_id", type="integer", description="等级")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function businessCardInfo($cardId)
+    {
+        $data = BloggerBusinessCardRepository::instance()->find($cardId, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id']);
+
+        return $this->response->success($data);
+    }
 }
