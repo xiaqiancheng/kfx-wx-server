@@ -737,7 +737,7 @@ class UserController extends AbstractController
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
         }
 
-        $data['blogger_id'] = 32;
+        $data['blogger_id'] = $userId;
         $data['douyin_id'] = $request['douyin_id'];
         $data['url'] = $request['url'];
 
