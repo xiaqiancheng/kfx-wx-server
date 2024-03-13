@@ -776,9 +776,10 @@ class UserController extends AbstractController
      *                 required={"list"},
      *                 @OA\Property(property="list", type="array", description="任务数据",
      *                     @OA\Items(type="object",
-     *                          required={"id", "url", "nickname", "avatar", "fans_count", "digg_count", "level_id"},
+     *                          required={"id", "url", "douyin_id", "nickname", "avatar", "fans_count", "digg_count", "level_id"},
      *                          @OA\Property(property="id", type="integer", description="名片ID"),
      *                          @OA\Property(property="url", type="string", description="主页链接"),
+     *                          @OA\Property(property="douyin_id", type="string", description="抖音ID"),
      *                          @OA\Property(property="nickname", type="string", description="昵称"),
      *                          @OA\Property(property="avatar", type="string", description="头像"),
      *                          @OA\Property(property="fans_count", type="integer", description="粉丝数"),
@@ -797,7 +798,7 @@ class UserController extends AbstractController
 
         $filter['blogger_id'] = $userId;
 
-        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
+        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
 
         return $this->response->success($list);
     }
