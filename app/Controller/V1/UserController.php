@@ -606,11 +606,12 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"uid", "nickname", "avatar", "fans_count", "level"},
+     *                 required={"uid", "nickname", "avatar", "fans_count", "digg_count", "level"},
      *                 @OA\Property(property="uid", type="string", description="抖音ID"),
      *                 @OA\Property(property="nickname", type="string", description="昵称"),
      *                 @OA\Property(property="avatar", type="string", description="头像"),
      *                 @OA\Property(property="fans_count", type="integer", description="粉丝数"),
+     *                 @OA\Property(property="digg_count", type="integer", description="点赞数"),
      *                 @OA\Property(property="level", type="integer", description="等级")
      *             )
      *         )
@@ -655,16 +656,19 @@ class UserController extends AbstractController
                 $avatarDomain = $parsed_url['scheme'] . '://' . $parsed_url['host'] . $parsed_url['path'];
             }
             $resOtherpart = feiguaUrl($otherpart);
+            if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
+                throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
+            }
             return $this->response->success([
                 'uid' => $res['user_info']['unique_id'],
                 'nickname' => $res['user_info']['nickname'],
                 'avatar' => $avatarDomain,
                 'fans_count' => $res['user_info']['mplatform_followers_count'],
-                'level' => $resOtherpart['Data']['SellGoodsLevelInt'],
+                'digg_count' => $res['user_info']['total_favorited'],
+                'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
             ], '获取信息成功');
-            return ;
         } else {
-            return $this->response->success();
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
         }
     }
 
