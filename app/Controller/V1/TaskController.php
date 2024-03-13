@@ -352,9 +352,10 @@ class TaskController extends AbstractController
                 $data['sign_status'] = $result['sign_status'];
             }
 
-            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'is_balance'], ['id' => 'desc']);
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'refuse_reason', 'is_balance'], ['id' => 'desc']);
             if ($result1) {
                 $data['video_check_status'] = $result1['status'];
+                $data['reject_reason'] = $result1['refuse_reason'];
                 $data['is_balance'] = $result1['is_balance'];
             }
         }
