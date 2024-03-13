@@ -281,7 +281,7 @@ class TaskController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                 required={"id", "task_name", "task_type", "sign_status", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info", "restrict_level"},
+     *                 required={"id", "task_name", "task_type", "sign_status", "task_desc", "shop_id", "reserve_time", "remark", "audit_requirement", "creative_guidance", "task_settle_type", "task_start_time", "task_end_time", "payment_allocate_ratio", "task_icon", "task_tags", "refer_ma_captures", "cost_template_id", "collection_status", "reject_reason", "video_check_status", "is_balance", "max_video_info", "restrict_level", "release_start_time", "release_end_time"},
      *                 @OA\Property(property="id", type="integer", description="任务id"),
      *                 @OA\Property(property="task_name", type="string", description="任务名称"),
      *                 @OA\Property(property="task_type", type="integer", description="任务类型 1普通任务 2探店任务"),
@@ -307,6 +307,8 @@ class TaskController extends AbstractController
      *                 @OA\Property(property="video_check_status", type="integer", description="视频审核状态 -1未提交视频 0待审核 1已审核 2已拒绝"),
      *                 @OA\Property(property="is_balance", type="integer", description="是否结算  0任务中 1待结算 2已结算"),
      *                 @OA\Property(property="restrict_level", type="string", description="限制达人报名等级，数组格式"),
+     *                 @OA\Property(property="release_start_time", type="string", description="发布开始时间"),
+     *                 @OA\Property(property="release_end_time", type="string", description="发布结束时间"),
      *                 @OA\Property(property="max_video_info", type="array", description="视频榜单数据",
      *                     @OA\Items(type="object", 
      *                          required={"id", "cover", "play_count", "forward_count", "digg_count"},
@@ -343,6 +345,8 @@ class TaskController extends AbstractController
         $data['video_check_status'] = -1;
         $data['is_balance'] = -1;
 
+        $data['release_start_time'] = '';
+        $data['release_end_time'] = '';
         if ($userInfo) {
             $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'reject_reason', 'sign_status', 'updated_at'], ['id' => 'desc']);
             if ($result) {
@@ -352,11 +356,13 @@ class TaskController extends AbstractController
                 $data['sign_status'] = $result['sign_status'];
             }
 
-            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'refuse_reason', 'is_balance'], ['id' => 'desc']);
+            $result1 = VideoRepository::instance()->findOneBy(['task_id' => $taskId, 'blogger_id' => $userInfo->id], ['status', 'refuse_reason', 'is_balance', 'release_start_time', 'release_end_time'], ['id' => 'desc']);
             if ($result1) {
                 $data['video_check_status'] = $result1['status'];
                 $data['reject_reason'] = $result1['refuse_reason'];
                 $data['is_balance'] = $result1['is_balance'];
+                $data['release_start_time'] = $result1['release_start_time'];
+                $data['release_end_time'] = $result1['release_end_time'];
             }
         }
 
