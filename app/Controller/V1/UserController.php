@@ -702,7 +702,8 @@ class UserController extends AbstractController
      *             @OA\Property(property="avatar", type="string", description="头像"),
      *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
-     *             @OA\Property(property="level_id", type="integer", description="等级ID")
+     *             @OA\Property(property="level_id", type="integer", description="等级ID"),
+     *             @OA\Property(property="extend", type="string", description="扩展信息 数组格式")
      *         )
      *     ),
      *     @OA\Response(response="200", description="返回",
@@ -716,7 +717,7 @@ class UserController extends AbstractController
      */
     public function businessCardAdd()
     {
-        $request = $this->request->inputs(['url', 'nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+        $request = $this->request->inputs(['url', 'nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id', 'extend']);
         $userId = $this->request->getAttribute('auth')->id;
 
         $validator = $this->validationFactory->make(
@@ -736,7 +737,7 @@ class UserController extends AbstractController
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
         }
 
-        $data['blogger_id'] = $userId;
+        $data['blogger_id'] = 32;
         $data['douyin_id'] = $request['douyin_id'];
         $data['url'] = $request['url'];
 
@@ -762,6 +763,8 @@ class UserController extends AbstractController
         if ($res) {
             throw new BusinessException(ErrorCode::SERVER_ERROR, '此账号已添加');
         }
+
+        $data['extend'] = $request['extend'] ?? [];
 
         BloggerBusinessCardRepository::instance()->saveData($data);
 
@@ -864,7 +867,8 @@ class UserController extends AbstractController
      *             @OA\Property(property="avatar", type="string", description="头像"),
      *             @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *             @OA\Property(property="digg_count", type="integer", description="点赞数"),
-     *             @OA\Property(property="level_id", type="integer", description="等级ID")
+     *             @OA\Property(property="level_id", type="integer", description="等级ID"),
+     *             @OA\Property(property="extend", type="string", description="扩展信息 数组格式")
      *         )
      *     ),
      *     @OA\Response(response="200", description="返回",
@@ -878,7 +882,7 @@ class UserController extends AbstractController
      */
     public function businessCardEdit($cardId)
     {
-        $request = $this->request->inputs(['nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id']);
+        $request = $this->request->inputs(['nickname', 'avatar', 'douyin_id', 'fans_count', 'digg_count', 'level_id', 'extend']);
 
         $validator = $this->validationFactory->make(
             $request,
@@ -924,6 +928,8 @@ class UserController extends AbstractController
             $data['level_id'] = $request['level_id'];
         }
 
+        $data['extend'] = $request['extend'] ?? [];
+
         BloggerBusinessCardRepository::instance()->saveData($data);
 
         return $this->response->success([], '名片更新成功');
@@ -948,7 +954,7 @@ class UserController extends AbstractController
      *             @OA\Property(property="errcode", type="integer", description="错误码"),
      *             @OA\Property(property="errmsg", type="string", description="接口信息"),
      *             @OA\Property(property="data", type="object", description="信息返回",
-     *                  required={"id", "url", "douyin_id", "nickname", "avatar", "fans_count", "digg_count", "level_id"},
+     *                  required={"id", "url", "douyin_id", "nickname", "avatar", "fans_count", "digg_count", "level_id", "extend"},
      *                  @OA\Property(property="id", type="integer", description="名片ID"),
      *                  @OA\Property(property="url", type="string", description="主页链接"),
      *                  @OA\Property(property="douyin_id", type="string", description="抖音ID"),
@@ -956,7 +962,8 @@ class UserController extends AbstractController
      *                  @OA\Property(property="avatar", type="string", description="头像"),
      *                  @OA\Property(property="fans_count", type="integer", description="粉丝数"),
      *                  @OA\Property(property="digg_count", type="integer", description="点赞数"),
-     *                  @OA\Property(property="level_id", type="integer", description="等级")
+     *                  @OA\Property(property="level_id", type="integer", description="等级"),
+     *                  @OA\Property(property="extend", type="string", description="扩展信息 数组格式"),
      *             )
      *         )
      *     )
@@ -964,7 +971,7 @@ class UserController extends AbstractController
      */
     public function businessCardInfo($cardId)
     {
-        $data = BloggerBusinessCardRepository::instance()->find($cardId, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id']);
+        $data = BloggerBusinessCardRepository::instance()->find($cardId, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id', 'extend']);
 
         return $this->response->success($data);
     }

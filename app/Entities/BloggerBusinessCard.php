@@ -34,5 +34,5 @@ class BloggerBusinessCard extends Entity
      *
      * @var array
      */
-    protected $casts = ['id' => 'integer', 'blogger_id' => 'integer', 'fans_count' => 'integer', 'digg_count' => 'integer', 'level_id' => 'integer', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
+    protected $casts = ['id' => 'integer', 'blogger_id' => 'integer', 'fans_count' => 'integer', 'digg_count' => 'integer', 'level_id' => 'integer', 'extend' => 'array', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
 }

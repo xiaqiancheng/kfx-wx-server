@@ -21,6 +21,7 @@ class CreateBloggerBusinessCardTable extends Migration
             $table->integer('fans_count')->default(0)->comment('粉丝数');
             $table->integer('digg_count')->default(0)->comment('点赞数');
             $table->integer('level_id')->default(0)->comment('等级');
+            $table->text('extend')->comment('扩展信息');
             $table->timestamps();
         });
     }
