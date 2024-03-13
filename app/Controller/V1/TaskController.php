@@ -974,4 +974,83 @@ class TaskController extends AbstractController
 
         return $this->response->success($result);
     }
+
+    /**
+     * @OA\Post(
+     *     path="/wxapi/task/visit-shop/sign",
+     *     tags={"任务"},
+     *     summary="探店签到",
+     *     description="探店签到",
+     *     operationId="TaskController_visitShopSign",
+     *     @OA\Parameter(name="Authorization", in="header", description="jwt签名", required=true,
+     *         @OA\Schema(type="string", default="Bearer {{Authorization}}")
+     *     ),
+     *     @OA\RequestBody(description="请求body",
+     *         @OA\JsonContent(type="object",
+     *             required={"task_id"},
+     *             @OA\Property(property="task_id", type="integer", description="任务ID")
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="返回",
+     *         @OA\JsonContent(type="object",
+     *             required={"errcode", "errmsg", "data"},
+     *             @OA\Property(property="errcode", type="integer", description="错误码"),
+     *             @OA\Property(property="errmsg", type="string", description="接口信息")
+     *         )
+     *     )
+     * )
+     */
+    public function visitShopSign()
+    {
+        $request = $this->request->inputs(['task_id']);
+
+        $validator = $this->validationFactory->make(
+            $request,
+            [
+                'task_id' => 'required'
+            ],
+            [
+                'task_id.required' => '任务必id须'
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first();
+            throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
+        }
+
+        $service = new TaskService();
+        $data = $service->find($request['task_id'], ['id', 'task_name', 'status']);
+        if (empty($data)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务不存在');
+        }
+
+        $user = $this->request->getAttribute('auth');
+
+        $result = TaskCollectionRepository::instance()->findOneBy(['task_id' => $request['task_id'], 'blogger_id' => $user->id, 'status' => ['in', [0, 1, 2]]], ['id', 'status', 'sign_status'], ['id' => 'desc']);
+        if (empty($result)) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务还未申领');
+        }
+
+        if (in_array($result['status'], [2])) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '任务已被拒绝');
+        }
+
+        if ($result['sign_status'] === 1) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '已签到');
+        }
+
+        $saveData = [
+            'id' => $result['id'],
+            'sign_status' => 1
+        ];
+
+        try {
+            TaskCollectionRepository::instance()->saveData($saveData);
+        } catch (\Throwable $e) {
+            throw new BusinessException(ErrorCode::SERVER_ERROR, '探店签到失败');
+        }
+
+        return $this->response->success([], '探店签到成功');
+    }
 }
