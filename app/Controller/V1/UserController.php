@@ -657,6 +657,7 @@ class UserController extends AbstractController
             }
             $resOtherpart = feiguaUrl($otherpart);
             if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
+                logger('获取抖音信息1')->error(json_encode($resOtherpart).json_encode($resMainpart));
                 throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
             }
             return $this->response->success([
@@ -668,6 +669,7 @@ class UserController extends AbstractController
                 'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
             ], '获取信息成功');
         } else {
+            logger('获取抖音信息2')->error($output);
             throw new BusinessException(ErrorCode::SERVER_ERROR, '获取失败，请稍后再试');
         }
     }
