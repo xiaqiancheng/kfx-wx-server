@@ -18,6 +18,7 @@ use App\Repositories\TaskRepository;
 use App\Repositories\UserIncomeDetailRepository;
 use App\Services\QRcodeService;
 use Endroid\QrCode\QrCode;
+use Hyperf\Cache\Cache;
 
 class UserController extends AbstractController
 {
@@ -26,7 +27,11 @@ class UserController extends AbstractController
      * @var AuthManager
      */
     protected $auth;
-
+  /**
+     * @Inject()
+     * @var Cache
+     */
+    protected $cache;
     /**
      * @Inject
      * @var ValidatorFactoryInterface
@@ -198,6 +203,7 @@ class UserController extends AbstractController
             'nickName' => $user->nickName,
             'level' => $user->level,
             'income' => $user->income,
+            'extend'=>$user->extend,
             'is_douyin_authorize' => empty($user->doyin_id) ? 0 : 1
         ]);
     }
@@ -621,23 +627,48 @@ class UserController extends AbstractController
     public function getDouYinInfo()
     {
         $url = $this->request->input('url', '');
+        $extractUserId = $this->request->input('extractUserId', '');
         if (empty($url)) {
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, 'URL不能为空');
         }
 
         $time = time();
         $secondstime = getMilliseconds();
-        $redirect_url = get_redirect_url($url);
-        $parts = parse_url($redirect_url);
-        $path = $parts['path'];
-        $userPos = strpos($path, 'user/');
-        $sec_user_id = substr($path, $userPos + 5); // 5是'user/'的长度
-        $info_url = 'https://m.douyin.com/web/api/v2/user/info/?reflow_source=reflow_page&sec_uid=' . $sec_user_id;
-        $output = file_get_contents($info_url);
+        if(!empty($extractUserId)){
+            $sec_user_id = $extractUserId;
+        }else{
+                 $redirect_url = get_redirect_url($url);
+            $parts = parse_url($redirect_url);
+            $path = $parts['path'];
+            $userPos = strpos($path, 'user/');
+            $sec_user_id = substr($path, $userPos + 5); // 5是'user/'的长度
+        }
+   
+        
+      $output = $this->cache->get("douyin_user_info".md5($sec_user_id));
+      if(empty($output)){
+          $info_url = 'https://m.douyin.com/web/api/v2/user/info/?reflow_source=reflow_page&sec_uid=' . $sec_user_id;
+          $output = file_get_contents($info_url);
+          if(!empty($output)){
+              $this->cache->set("douyin_user_info".md5($sec_user_id),$output);
+          }
+         
+      }
+         
+
+        
+        
+        
         $res = json_decode($output, true);
         if (isset($res['user_info'])) {
             $result = $res['user_info'];
-            $feiguasearch='https://dy.feigua.cn/api/v1/other/navSearch/blogger?keyWord='.$result['unique_id'].'&_='.$secondstime.'';
+            $url = $result['unique_id'];
+        }
+        
+        
+        // if (isset($res['user_info'])) {
+            // $result = $res['user_info'];
+            $feiguasearch='https://dy.feigua.cn/api/v1/other/navSearch/blogger?keyWord='.$url.'&_='.$secondstime.'';
 
             $resfg = feiguaUrl($feiguasearch);
             $query_string = parse_url($resfg['Data']['BloggerResult']['List'][0]['DetailUrl'], PHP_URL_FRAGMENT); // 这将返回"#"后面的部分
@@ -656,9 +687,14 @@ class UserController extends AbstractController
                 $avatarDomain = $parsed_url['scheme'] . '://' . $parsed_url['host'] . $parsed_url['path'];
             }
             $resOtherpart = feiguaUrl($otherpart);
-            if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
+         
+            if (!isset($res['user_info'])) {
+                   if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
                 logger('获取抖音信息1')->error(json_encode($resOtherpart).json_encode($resMainpart));
                 return $this->response->json([
+                     "dyUserInfo"=>$res['user_info'],
+                'resMainpart'=>$resMainpart,
+                'resOtherpart'=>$resOtherpart,
                     'errcode' => 50000,
                     'errmsg' => '获取失败，请稍后再试',
                     'log' => $resOtherpart,
@@ -666,21 +702,37 @@ class UserController extends AbstractController
                 ]);
             }
             return $this->response->success([
+                "dyUserInfo"=>$res['user_info'],
+                'resMainpart'=>$resMainpart,
+                'resOtherpart'=>$resOtherpart,
+                'uid' => $resMainpart['UniqueId'],//$res['user_info']['unique_id'],
+                'nickname' => $resMainpart['NickName'],//$res['user_info']['nickname'],
+                'avatar' => $avatarDomain,
+                'fans_count' => $resMainpart['Fans'],//$res['user_info']['mplatform_followers_count'],
+                'digg_count' => $resMainpart['LikeCount'],//$res['user_info']['total_favorited'],
+                'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
+            ], '获取信息成功');
+            }else{
+                 return $this->response->success([
+                     "dyUserInfo"=>$res['user_info'],
+                'resMainpart'=>$resMainpart,
+                'resOtherpart'=>$resOtherpart,
                 'uid' => $res['user_info']['unique_id'],
                 'nickname' => $res['user_info']['nickname'],
-                'avatar' => $avatarDomain,
+                'avatar' => $res['user_info']['avatar_thumb']['url_list'][0],//$avatarDomain,
                 'fans_count' => $res['user_info']['mplatform_followers_count'],
                 'digg_count' => $res['user_info']['total_favorited'],
                 'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
             ], '获取信息成功');
-        } else {
-            logger('获取抖音信息2')->error($output);
-            return $this->response->json([
-                'errcode' => 50000,
-                'errmsg' => '获取失败，请稍后再试',
-                'log' => $res
-            ]);
-        }
+            }
+        // } else {
+        //     logger('获取抖音信息2')->error($output);
+        //     return $this->response->json([
+        //         'errcode' => 50000,
+        //         'errmsg' => '获取失败，请稍后再试'.$info_url,
+        //         'log' => $res
+        //     ]);
+        // }
     }
 
     /**
@@ -737,7 +789,7 @@ class UserController extends AbstractController
             throw new BusinessException(ErrorCode::PARAMETER_ERROR, $errorMessage);
         }
 
-        $data['blogger_id'] = 32;
+        $data['blogger_id'] = $userId;
         $data['douyin_id'] = $request['douyin_id'];
         $data['url'] = $request['url'];
 
@@ -811,8 +863,8 @@ class UserController extends AbstractController
         $userId = $this->request->getAttribute('auth')->id;
 
         $filter['blogger_id'] = $userId;
-
-        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id'], 0, 0, ['id' => 'desc'], [], false);
+//'extend'=>($user->extend?json_decode($user->extend):[]),
+        $list = BloggerBusinessCardRepository::instance()->getList($filter, ['id', 'url', 'douyin_id', 'nickname', 'avatar', 'fans_count', 'digg_count', 'level_id','extend'], 0, 0, ['id' => 'desc'], [], false);
 
         return $this->response->success($list);
     }
