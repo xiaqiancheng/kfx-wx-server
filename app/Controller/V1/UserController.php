@@ -637,64 +637,55 @@ class UserController extends AbstractController
         if(!empty($extractUserId)){
             $sec_user_id = $extractUserId;
         }else{
-                 $redirect_url = get_redirect_url($url);
+            $redirect_url = get_redirect_url($url);
             $parts = parse_url($redirect_url);
             $path = $parts['path'];
             $userPos = strpos($path, 'user/');
             $sec_user_id = substr($path, $userPos + 5); // 5是'user/'的长度
         }
-   
-        
-      $output = $this->cache->get("douyin_user_info".md5($sec_user_id));
-      if(empty($output)){
-          $info_url = 'https://m.douyin.com/web/api/v2/user/info/?reflow_source=reflow_page&sec_uid=' . $sec_user_id;
-          $output = file_get_contents($info_url);
-          if(!empty($output)){
-              $this->cache->set("douyin_user_info".md5($sec_user_id),$output);
-          }
-         
-      }
-         
-
-        
-        
+        $output = $this->cache->get("douyin_user_info".md5($sec_user_id));
+        if(empty($output)){
+            $info_url = 'https://m.douyin.com/web/api/v2/user/info/?reflow_source=reflow_page&sec_uid=' . $sec_user_id;
+            $output = file_get_contents($info_url);
+            if(!empty($output)){
+                $this->cache->set("douyin_user_info".md5($sec_user_id),$output);
+            }
+        }
         
         $res = json_decode($output, true);
         if (isset($res['user_info'])) {
             $result = $res['user_info'];
             $url = $result['unique_id'];
         }
-        
-        
-        // if (isset($res['user_info'])) {
-            // $result = $res['user_info'];
-            $feiguasearch='https://dy.feigua.cn/api/v1/other/navSearch/blogger?keyWord='.$url.'&_='.$secondstime.'';
 
-            $resfg = feiguaUrl($feiguasearch);
-            $query_string = parse_url($resfg['Data']['BloggerResult']['List'][0]['DetailUrl'], PHP_URL_FRAGMENT); // 这将返回"#"后面的部分
-            $query_string = ltrim($query_string, '#'); // 移除开头的"#"// 现在我们将查询字符串解析为关联数组
-            parse_str($query_string, $query_params);// 提取bloggerId和sign的值
-            $bloggerId = isset($query_params['/blogger-detail/index?bloggerId']) ? $query_params['/blogger-detail/index?bloggerId'] : null;
-            $sign = isset($query_params['sign']) ? $query_params['sign'] : null;
-            $ts = isset($query_params['ts']) ? $query_params['ts'] : null;
-            $mainpart='https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/mainpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$ts.'&_='.$secondstime.'';
-            $otherpart = 'https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/otherpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$time.'&_='.$secondstime.'';
-            $resMainpart = feiguaUrl($mainpart);
-            $avatarDomain = '';
-            $avatar = isset($resMainpart['Data']) ? $resMainpart['Data']['Avatar'] : '';
-            if ($avatar) {
-                $parsed_url = parse_url($avatar);
-                $avatarDomain = $parsed_url['scheme'] . '://' . $parsed_url['host'] . $parsed_url['path'];
-            }
-            $resOtherpart = feiguaUrl($otherpart);
-         
-            if (!isset($res['user_info'])) {
-                   if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
+        // if (isset($res['user_info'])) {
+        // $result = $res['user_info'];
+        $feiguasearch='https://dy.feigua.cn/api/v1/other/navSearch/blogger?keyWord='.$url.'&_='.$secondstime.'';
+        $resfg = feiguaUrl($feiguasearch);
+        $query_string = parse_url($resfg['Data']['BloggerResult']['List'][0]['DetailUrl'], PHP_URL_FRAGMENT); // 这将返回"#"后面的部分
+        $query_string = ltrim($query_string, '#'); // 移除开头的"#"// 现在我们将查询字符串解析为关联数组
+        parse_str($query_string, $query_params);// 提取bloggerId和sign的值
+        $bloggerId = isset($query_params['/blogger-detail/index?bloggerId']) ? $query_params['/blogger-detail/index?bloggerId'] : null;
+        $sign = isset($query_params['sign']) ? $query_params['sign'] : null;
+        $ts = isset($query_params['ts']) ? $query_params['ts'] : null;
+        $mainpart='https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/mainpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$ts.'&_='.$secondstime.'';
+        $otherpart = 'https://dy.feigua.cn/api/v1/bloggerdetailoverview/detail/otherpart?id='.$bloggerId.'&sign='.$sign.'&ts='.$time.'&_='.$secondstime.'';
+        $resMainpart = feiguaUrl($mainpart);
+        $avatarDomain = '';
+        $avatar = isset($resMainpart['Data']) ? $resMainpart['Data']['Avatar'] : '';
+        if ($avatar) {
+            $parsed_url = parse_url($avatar);
+            $avatarDomain = $parsed_url['scheme'] . '://' . $parsed_url['host'] . $parsed_url['path'];
+        }
+        $resOtherpart = feiguaUrl($otherpart);
+        
+        if (!isset($res['user_info'])) {
+            if (!$resOtherpart['Status'] || !$resMainpart['Status']) {
                 logger('获取抖音信息1')->error(json_encode($resOtherpart).json_encode($resMainpart));
                 return $this->response->json([
-                     "dyUserInfo"=>$res['user_info'],
-                'resMainpart'=>$resMainpart,
-                'resOtherpart'=>$resOtherpart,
+                    "dyUserInfo"=>$res['user_info'],
+                    'resMainpart'=>$resMainpart,
+                    'resOtherpart'=>$resOtherpart,
                     'errcode' => 50000,
                     'errmsg' => '获取失败，请稍后再试',
                     'log' => $resOtherpart,
@@ -712,9 +703,9 @@ class UserController extends AbstractController
                 'digg_count' => $resMainpart['LikeCount'],//$res['user_info']['total_favorited'],
                 'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
             ], '获取信息成功');
-            }else{
-                 return $this->response->success([
-                     "dyUserInfo"=>$res['user_info'],
+        }else{
+            return $this->response->success([
+                "dyUserInfo"=>$res['user_info'],
                 'resMainpart'=>$resMainpart,
                 'resOtherpart'=>$resOtherpart,
                 'uid' => $res['user_info']['unique_id'],
@@ -724,7 +715,7 @@ class UserController extends AbstractController
                 'digg_count' => $res['user_info']['total_favorited'],
                 'level' => $resOtherpart['Data']['SellGoodsLevelInt'] ?? 0,
             ], '获取信息成功');
-            }
+        }
         // } else {
         //     logger('获取抖音信息2')->error($output);
         //     return $this->response->json([
